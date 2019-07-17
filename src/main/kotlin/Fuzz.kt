@@ -19,7 +19,7 @@ data class SourceModification(
 data class FuzzConfiguration(
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">=")
 )
-class Fuzzer(val configuration: FuzzConfiguration = FuzzConfiguration()) : FuzzyJavaParserBaseListener() {
+class Fuzzer(val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
     val sourceModifications: MutableSet<SourceModification> = mutableSetOf()
 
     override fun enterExpression(ctx: FuzzyJavaParser.ExpressionContext) {
@@ -45,13 +45,14 @@ fun Set<SourceModification>.apply(source: String): String {
         val currentModification = unappliedModifications.first()
 
         assert(currentModification.startLine == currentModification.endLine)
+
         val lineToModify = modifiedSource[currentModification.startLine - 1].toCharArray()
         val toReplace = lineToModify.slice(IntRange(currentModification.startColumn, currentModification.endColumn - 1)).joinToString(separator = "")
         assert(toReplace == currentModification.content)
         modifiedSource[currentModification.startLine - 1] =
                 lineToModify.slice(IntRange(0, currentModification.startColumn - 1)).joinToString(separator = "") +
-                        currentModification.replace +
-                        lineToModify.slice(IntRange(currentModification.endColumn, lineToModify.size - 1)).joinToString(separator = "")
+                currentModification.replace +
+                lineToModify.slice(IntRange(currentModification.endColumn, lineToModify.size - 1)).joinToString(separator = "")
 
         val difference = currentModification.replace.length - currentModification.content.length
         unappliedModifications.filter {
@@ -67,15 +68,16 @@ fun Set<SourceModification>.apply(source: String): String {
 
         unappliedModifications.remove(currentModification)
     }
+
     return modifiedSource.joinToString(separator = "\n")
 }
 
-fun fuzzBlock(block: String): String {
+fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
     val fuzzyJavaParseTree = parseFuzzyJava("""{
 $block
 }""").block()
 
-    val fuzzer = Fuzzer()
+    val fuzzer = Fuzzer(fuzzConfiguration)
     val walker = ParseTreeWalker()
     walker.walk(fuzzer, fuzzyJavaParseTree)
 
@@ -84,6 +86,22 @@ $block
         it.copy(startLine = it.startLine - 1, endLine = it.endLine - 1)
     }.toSet()
     val modifiedSource = sourceModifications.apply(block)
+
+    parseJava("""{
+$modifiedSource
+}""").block()
+
+    return modifiedSource
+}
+
+fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
+    val fuzzyJavaParseTree = parseFuzzyJava(unit).compilationUnit()
+
+    val fuzzer = Fuzzer(fuzzConfiguration)
+    val walker = ParseTreeWalker()
+    walker.walk(fuzzer, fuzzyJavaParseTree)
+
+    val modifiedSource = fuzzer.sourceModifications.apply(unit)
 
     parseJava("""{
 $modifiedSource
