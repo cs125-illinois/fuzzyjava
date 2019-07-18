@@ -3,9 +3,12 @@ package edu.illinois.cs.cs125.fuzzyjava
 import edu.illinois.cs.cs125.fuzzyjava.antlr.*
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTreeWalker
+import org.antlr.v4.runtime.tree.TerminalNode
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
+
+typealias Scopes = Stack<MutableMap<String, String>> //Todo: This mapping might change (key values could be set or map of RuleContexts)
 
 const val FUZZY_COMPARISON = "?="
 
@@ -20,14 +23,13 @@ data class SourceModification(
 
 data class FuzzConfiguration(
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
-        val fuzzyIdentifierTargets: List<String> =
-                "abcedfghijklmnopqrstuvwxyz_$".toCharArray()
-                                              .map { it.toString().plus((Math.random() * 100000000).toInt()) } //Todo: Find a better way to implement this
+        val fuzzyIdentifierTargets: List<String> = getIDs() //Todo: Find a better way to implement this
+
 )
 
-class Fuzzer(val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
+class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
+    private var scopes = Scopes()
     val sourceModifications: MutableSet<SourceModification> = mutableSetOf()
-    var scopes = Stack<MutableMap<String, String>>() //Todo: This mapping might change (key values could be set or map of RuleContexts)
 
     override fun enterExpression(ctx: FuzzyJavaParser.ExpressionContext) {
         if (ctx.bop?.text?.trim() != FUZZY_COMPARISON) {
@@ -48,40 +50,28 @@ class Fuzzer(val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener
     }
 
     override fun enterVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
-        if (ctx.FUZZYIDENTIFIER() == null) {
-            return
-        }
-        val fuzzyIdentifier = ctx.FUZZYIDENTIFIER().symbol // The token that represents the fuzzy identifier
-        val startLine = fuzzyIdentifier.line
-        val endLine = fuzzyIdentifier.line
-        val startColumn = fuzzyIdentifier.charPositionInLine
-        val endColumn = startColumn + fuzzyIdentifier.text.length
-        var replacement = configuration.fuzzyIdentifierTargets.random()
-
-        for (scope in scopes) {
-            if (scope.containsKey(fuzzyIdentifier.text)) {
-                replacement = scope[fuzzyIdentifier.text]!! //Todo: Figure out how to get around this
-                break
-            }
-        }
-        scopes[scopes.size - 1][fuzzyIdentifier.text] = replacement
-        sourceModifications.add(SourceModification(
-                startLine, startColumn, endLine, endColumn, fuzzyIdentifier.text, replacement
-        ))
+        fuzzIdentifier(ctx.FUZZYIDENTIFIER())
     }
 
     override fun enterPrimary(ctx: FuzzyJavaParser.PrimaryContext) {
-        if (ctx.FUZZYIDENTIFIER() == null) {
+        fuzzIdentifier(ctx.FUZZYIDENTIFIER())
+    }
+
+    /*
+     * Helper method for fuzzing identifiers
+     */
+    private fun fuzzIdentifier(node:TerminalNode?) {
+        if (node == null) {
             return
         }
-        val fuzzyIdentifier = ctx.FUZZYIDENTIFIER().symbol // The token that represents the fuzzy identifier
+        val fuzzyIdentifier = node.symbol // The token that represents the fuzzy identifier
         val startLine = fuzzyIdentifier.line
         val endLine = fuzzyIdentifier.line
         val startColumn = fuzzyIdentifier.charPositionInLine
         val endColumn = startColumn + fuzzyIdentifier.text.length
         var replacement = configuration.fuzzyIdentifierTargets.random()
 
-        for (scope in scopes) {
+        for (scope in scopes) { // Checks if fuzzy variable has already been defined in this or a parent scope
             if (scope.containsKey(fuzzyIdentifier.text)) {
                 replacement = scope[fuzzyIdentifier.text]!! //Todo: Figure out how to get around this
                 break
@@ -91,11 +81,12 @@ class Fuzzer(val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener
         sourceModifications.add(SourceModification(
                 startLine, startColumn, endLine, endColumn, fuzzyIdentifier.text, replacement
         ))
+
     }
 }
 
 fun Set<SourceModification>.apply(source: String): String {
-    var modifiedSource = source.lines().toMutableList()
+    val modifiedSource = source.lines().toMutableList()
 
     val unappliedModifications = mutableListOf<SourceModification>().apply {
         addAll(this@apply)
@@ -131,6 +122,15 @@ fun Set<SourceModification>.apply(source: String): String {
     }
 
     return modifiedSource.joinToString(separator = "\n")
+}
+
+private fun getIDs(): List<String> {
+    val toReturn: MutableList<String> = mutableListOf()
+    for (number in 0..10000) {
+        val newId = "cs125".plus(UUID.randomUUID().toString().replace("-", "_")).substring(0..15)
+        toReturn.add(newId)
+    }
+    return toReturn
 }
 
 fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
