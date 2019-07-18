@@ -30,9 +30,8 @@
 lexer grammar FuzzyJavaLexer;
 
 // Fuzzy keywords
-FUZZYCOMPARISON:    '?=';
-FUZZYIDENTIFIER:    '?'IDENTIFIER;
-
+FUZZYCOMPARISON:    QUESTION ASSIGN;
+FUZZYIDENTIFIER:    QUESTION IDENTIFIER;
 
 // Keywords
 

@@ -3,12 +3,10 @@ package edu.illinois.cs.cs125.fuzzyjava
 import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
 import io.kotlintest.specs.StringSpec
 import io.kotlintest.*
-import io.kotlintest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.matchers.string.shouldEndWith
 import io.kotlintest.matchers.string.shouldStartWith
 import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
 
 class TestFuzz : StringSpec({
     "should not modify blocks without fuzz" {
@@ -55,19 +53,30 @@ int ?test = 1;
     }
     "should map fuzzed identifiers with same id to same replacement id" {
         val source = """
-int ?identifier = 0;
-{
-    float ?test = 1.0;
-    {
-        boolean ?guess;
-        ?guess = false;
+public class Main {
+    public static void main() {
+        int i = 0;
+        int j = 10;
+        int ?identifier = 0;
+        {
+            float ?test = 1.0;
+            {
+                boolean ?guess;
+                ?guess = false;
+                if (guess) {
+                    ?identifier = 10000;
+                }
+            }
+            boolean ?guess = (true && false || true && (1 ?= 2));
+            ?test += ?identifier + ?test;
+        }
+        ?identifier *= ?identifier;
+        int ?some_number = (int) (Math.random() * j);
+        boolean k = (i ?= j && i ?= j) ? true : false;
     }
-    boolean ?guess = true && false || true;
-    ?test += ?identifier + ?test;
 }
-?identifier *= ?identifier;
 """.trim()
-        val fuzzedSource = fuzzBlock(source)
+        val fuzzedSource = fuzzCompilationUnit(source)
 
         val charStream = CharStreams.fromString(fuzzedSource)
         val javaLexer = JavaLexer(charStream)
@@ -76,14 +85,16 @@ int ?identifier = 0;
         val parsedTokens = javaLexer.allTokens.map {
             it.text
         }.filter {
-            it.matches("[a-z_$][0-9]+".toRegex())
+            it.startsWith("cs125")
         }
 
         for (token in parsedTokens) {
             variables[token] = variables.getOrDefault(token,0) + 1
         }
 
-        variables.values.size shouldBe 4 //Todo: This can still fail
-        variables.values shouldContainExactlyInAnyOrder mutableListOf(4, 3, 2, 1)
+        variables.values.size shouldBe 5 //This is not 100% guaranteed to pass (must be able to generate unique ids)
+        val variableFrequencies = variables.values.toMutableList()
+        variableFrequencies.sort()
+        variableFrequencies shouldBe mutableListOf(1, 1, 2, 3, 5)
     }
 })
