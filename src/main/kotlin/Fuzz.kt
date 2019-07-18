@@ -4,6 +4,8 @@ import edu.illinois.cs.cs125.fuzzyjava.antlr.*
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.HashMap
 
 const val FUZZY_COMPARISON = "?="
 
@@ -17,10 +19,15 @@ data class SourceModification(
 )
 
 data class FuzzConfiguration(
-        val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">=")
+        val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
+        val fuzzyIdentifierTargets: List<String> =
+                "abcedfghijklmnopqrstuvwxyz_$".toCharArray()
+                                              .map { it.toString().plus((Math.random() * 100000000).toInt()) } //Todo: Find a better way to implement this
 )
+
 class Fuzzer(val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
     val sourceModifications: MutableSet<SourceModification> = mutableSetOf()
+    var scopes = Stack<MutableMap<String, String>>() //Todo: This mapping might change (key values could be set or map of RuleContexts)
 
     override fun enterExpression(ctx: FuzzyJavaParser.ExpressionContext) {
         if (ctx.bop?.text?.trim() != FUZZY_COMPARISON) {
@@ -29,6 +36,60 @@ class Fuzzer(val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener
         sourceModifications.add(SourceModification(
                 ctx.bop.line, ctx.bop.charPositionInLine, ctx.bop.line, ctx.bop.charPositionInLine + FUZZY_COMPARISON.length,
                 FUZZY_COMPARISON, configuration.fuzzyComparisonTargets.random()
+        ))
+    }
+
+    override fun enterBlock(ctx: FuzzyJavaParser.BlockContext) {
+        scopes.add(HashMap())
+    }
+
+    override fun exitBlock(ctx: FuzzyJavaParser.BlockContext) {
+        scopes.pop()
+    }
+
+    override fun enterVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
+        if (ctx.FUZZYIDENTIFIER() == null) {
+            return
+        }
+        val fuzzyIdentifier = ctx.FUZZYIDENTIFIER().symbol // The token that represents the fuzzy identifier
+        val startLine = fuzzyIdentifier.line
+        val endLine = fuzzyIdentifier.line
+        val startColumn = fuzzyIdentifier.charPositionInLine
+        val endColumn = startColumn + fuzzyIdentifier.text.length
+        var replacement = configuration.fuzzyIdentifierTargets.random()
+
+        for (scope in scopes) {
+            if (scope.containsKey(fuzzyIdentifier.text)) {
+                replacement = scope[fuzzyIdentifier.text]!! //Todo: Figure out how to get around this
+                break
+            }
+        }
+        scopes[scopes.size - 1][fuzzyIdentifier.text] = replacement
+        sourceModifications.add(SourceModification(
+                startLine, startColumn, endLine, endColumn, fuzzyIdentifier.text, replacement
+        ))
+    }
+
+    override fun enterPrimary(ctx: FuzzyJavaParser.PrimaryContext) {
+        if (ctx.FUZZYIDENTIFIER() == null) {
+            return
+        }
+        val fuzzyIdentifier = ctx.FUZZYIDENTIFIER().symbol // The token that represents the fuzzy identifier
+        val startLine = fuzzyIdentifier.line
+        val endLine = fuzzyIdentifier.line
+        val startColumn = fuzzyIdentifier.charPositionInLine
+        val endColumn = startColumn + fuzzyIdentifier.text.length
+        var replacement = configuration.fuzzyIdentifierTargets.random()
+
+        for (scope in scopes) {
+            if (scope.containsKey(fuzzyIdentifier.text)) {
+                replacement = scope[fuzzyIdentifier.text]!! //Todo: Figure out how to get around this
+                break
+            }
+        }
+        scopes[scopes.size - 1][fuzzyIdentifier.text] = replacement
+        sourceModifications.add(SourceModification(
+                startLine, startColumn, endLine, endColumn, fuzzyIdentifier.text, replacement
         ))
     }
 }
@@ -41,7 +102,7 @@ fun Set<SourceModification>.apply(source: String): String {
     }
     unappliedModifications.sortWith(compareBy({ it.startLine }, { it.startColumn }))
 
-    while (!unappliedModifications.isEmpty()) {
+    while (unappliedModifications.isNotEmpty()) {
         val currentModification = unappliedModifications.first()
 
         assert(currentModification.startLine == currentModification.endLine)
@@ -126,6 +187,7 @@ private class JavaErrorListener : BaseErrorListener() {
         throw JavaParseError(line, charPositionInLine, msg)
     }
 }
+
 private fun parseJava(source: String): JavaParser {
     val javaErrorListener = JavaErrorListener()
     val charStream = CharStreams.fromString(source)
