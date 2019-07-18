@@ -229,6 +229,7 @@ variableDeclarator
 
 variableDeclaratorId
     : IDENTIFIER ('[' ']')*
+    | FUZZYIDENTIFIER
     ;
 
 variableInitializer
@@ -529,6 +530,7 @@ primary
     | THIS
     | SUPER
     | literal
+    | FUZZYIDENTIFIER
     | IDENTIFIER
     | typeTypeOrVoid '.' CLASS
     | nonWildcardTypeArguments (explicitGenericInvocationSuffix | THIS arguments)
