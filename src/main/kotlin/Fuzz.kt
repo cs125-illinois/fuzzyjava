@@ -8,9 +8,11 @@ import java.lang.Exception
 import java.util.*
 import kotlin.collections.HashMap
 
+//Todo: Finish documenting this class
 typealias Scopes = Stack<MutableMap<String, String>> //Todo: This mapping might change (key values could be set or map of RuleContexts)
 
 const val FUZZY_COMPARISON = "?="
+private val documenter = Documenter()
 
 data class SourceModification(
         var startLine: Int,
@@ -27,10 +29,25 @@ data class FuzzConfiguration(
 
 )
 
+//Todo: Better class description
+/**
+ * A class that generates variants.
+ */
 class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
+    /**Keeps track of the members defined in particular scopes.*/
     private var scopes = Scopes()
-    val sourceModifications: MutableSet<SourceModification> = mutableSetOf()
+    /**Keeps track of non-fuzzy identifiers.*/
+    private var definedIdentifiers: MutableSet<String> = mutableSetOf() //Identifiers include class names, methods names, variable names, etc.
+    /**Keeps track of the modifications made so they can be applied.*/
+    internal val sourceModifications: MutableSet<SourceModification> = mutableSetOf() // Added internal modifier because encapsulation and can't make the member private.
 
+
+    /**
+     * Enter event method that is called when the parse tree walker visits an expression context.
+     *
+     * @param ctx - The expression context visited by the parse tree walker.
+     */
+    @Override
     override fun enterExpression(ctx: FuzzyJavaParser.ExpressionContext) {
         if (ctx.bop?.text?.trim() != FUZZY_COMPARISON) {
             return
@@ -40,25 +57,71 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                 FUZZY_COMPARISON, configuration.fuzzyComparisonTargets.random()
         ))
     }
-
+    /*
+     * I say partially maintained because only nested classes and enums would be visible inside blocks
+     * so we have to figure out how to add the outermost definitions to the scope.
+     */
+    /**
+     * Enter event method that is called when the parse tree walker visits a block context.
+     * Scope is partially maintained here. See [scopes].
+     *
+     * @param ctx - The block context visited by the parse tree walker.
+     */
+    @Override
     override fun enterBlock(ctx: FuzzyJavaParser.BlockContext) {
         scopes.add(HashMap())
     }
-
+    /**
+     * Exit event method that is called when the parse tree walker visits an block context.
+     * Scope is partially maintained here. See [scopes].
+     *
+     * @param ctx - The expression context visited by the parse tree walker.
+     */
+    @Override
     override fun exitBlock(ctx: FuzzyJavaParser.BlockContext) {
         scopes.pop()
     }
-
+    /**
+     * Enter event method that is called when the parse tree walker visits an variableDeclaratorId context.
+     * Delegated to [fuzzIdentifier] for fuzzy identifiers.
+     *
+     * @param ctx - The variableDeclaratorId context visited by the parse tree walker.
+     */
+    @Override
     override fun enterVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
         fuzzIdentifier(ctx.FUZZYIDENTIFIER())
     }
+    /**
+     * Exit event method that is called when the parse tree walker visits an variableDeclaratorId context.
+     *
+     * @param ctx - The variableDeclaratorId context visited by the parse tree walker.
+     */
+    @Override
+    override fun exitVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
+        // Will only generate docs for fuzzy variables who are fields
+        //Todo: Does it make sense too add nullablity check for parent? Would this event even trigger if that were the case?
+        if (ctx.FUZZYIDENTIFIER() == null || (ctx.parent.parent !is JavaParser.FieldDeclarationContext)) {
+            return
+        }
+        val fuzzyVariableToken = ctx.FUZZYIDENTIFIER().symbol
+        // Todo: Do listeners exit in the same order they entered? Make sure that extracted variable is correct
+        val modification:SourceModification = sourceModifications.first { it.startLine == fuzzyVariableToken.line }
 
+        documenter.addModification(modification) // Todo: Check when the modifications are applied
+    }
+    /**
+     * Enter event method that is called when the parse tree walker visits an primary context.
+     * Delegated to [fuzzIdentifier] for fuzzy identifiers.
+     *
+     * @param ctx - The primary context visited by the parse tree walker.
+     */
+    @Override
     override fun enterPrimary(ctx: FuzzyJavaParser.PrimaryContext) {
         fuzzIdentifier(ctx.FUZZYIDENTIFIER())
     }
-
-    /*
-     * Helper method for fuzzing identifiers
+    /**
+     * Helper method for fuzzing identifiers.
+     * @param node - A fuzzy identifier node within the parse tree.
      */
     private fun fuzzIdentifier(node:TerminalNode?) {
         if (node == null) {
@@ -85,6 +148,12 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     }
 }
 
+//Todo: Better Documentation for this method.
+/**
+ * Method used to apply the modifications
+ * @param source - The source code that will be modified.
+ * @return Returns the modified source code.
+ */
 fun Set<SourceModification>.apply(source: String): String {
     val modifiedSource = source.lines().toMutableList()
 
@@ -121,18 +190,37 @@ fun Set<SourceModification>.apply(source: String): String {
         unappliedModifications.remove(currentModification)
     }
 
+    documenter.inspectModifications()
+
     return modifiedSource.joinToString(separator = "\n")
 }
 
 private fun getIDs(): List<String> {
-    val toReturn: MutableList<String> = mutableListOf()
+    var sequence = Sequence { object : Iterator<Int> {
+        var next = 0
+        override fun hasNext(): Boolean {return true}
+        override fun next(): Int {return next++}
+    } }
+
+    val nextInt = sequence.first()
+    sequence = sequence.drop(1)
+
+
+    val poolOfIdentifiers: MutableList<String> = mutableListOf()
     for (number in 0..10000) {
-        val newId = "cs125".plus(UUID.randomUUID().toString().replace("-", "_")).substring(0..15)
-        toReturn.add(newId)
+        val newId = "cs125".plus(UUID.randomUUID().toString().replace("-", "_"))
+        poolOfIdentifiers.add(newId)
     }
-    return toReturn
+    return poolOfIdentifiers
 }
 
+/**
+ * Fuzzes a "block" of template code.
+ *
+ * @param block - The block of source code to be fuzzed.
+ * @param fuzzConfiguration - The config that will be used to modify the block.
+ * @return Returns a block of Java code.
+ */
 fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
     val fuzzyJavaParseTree = parseFuzzyJava("""{
 $block
@@ -152,9 +240,17 @@ $block
 $modifiedSource
 }""").block()
 
+    //println(getDocumentationOfProblem() + "\n\n")
     return modifiedSource
 }
 
+/**
+ * Fuzzes a "unit" of template code.
+ *
+ * @param unit - The block of source code to be fuzzed.
+ * @param fuzzConfiguration - The config that will be used to modify the unit.
+ * @return Returns a unit of Java code.
+ */
 fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
     val fuzzyJavaParseTree = parseFuzzyJava(unit).compilationUnit()
 
@@ -168,9 +264,21 @@ fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = Fuz
 $modifiedSource
 }""").block()
 
+    //println(getDocumentationOfProblem() + "\n\n")
     return modifiedSource
 }
 
+fun getDocumentationOfProblem(): String {
+    return "";//documenter.getInspectionResults() //Todo: uncomment this
+}
+
+//Todo: Better docs for code below
+/**
+ * Used to check if code adheres to the template language syntax.
+ *
+ * @param source - The original source inputted by the user.
+ * @return Returns a parser.
+ */
 private fun parseFuzzyJava(source: String): FuzzyJavaParser {
     val charStream = CharStreams.fromString(source)
     val fuzzyJavaLexer = FuzzyJavaLexer(charStream)
@@ -178,16 +286,40 @@ private fun parseFuzzyJava(source: String): FuzzyJavaParser {
     return FuzzyJavaParser(tokenStream)
 }
 
+/**
+ * A class that holds information about what went wrong while parsing Java code.
+ */
 class JavaParseError(
         val line: Int, val column: Int, message: String
 ) : Exception(message)
 
+/**
+ * A class that creates a Java Listener.
+ */
 private class JavaErrorListener : BaseErrorListener() {
+    /**
+     * Detects Java syntax errors.
+     *
+     * @param recognizer -
+     * @param offendingSymbol - The illegal symbol.
+     * @param line - The line [offendingSymbol] was on.
+     * @param charPositionInLine - The character position of [offendingSymbol] within the [line].
+     * @param msg - Error message to display.
+     * @param e -
+     * @throws [JavaParseError]
+     */
+    @Override
     override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException?) {
         throw JavaParseError(line, charPositionInLine, msg)
     }
 }
 
+/**
+ * Parses Java code.
+ *
+ * @param source - The Java source code to be parsed.
+ * @return Returns a parser.
+ */
 private fun parseJava(source: String): JavaParser {
     val javaErrorListener = JavaErrorListener()
     val charStream = CharStreams.fromString(source)

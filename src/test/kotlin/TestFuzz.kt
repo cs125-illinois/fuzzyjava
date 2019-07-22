@@ -7,6 +7,8 @@ import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.matchers.string.shouldEndWith
 import io.kotlintest.matchers.string.shouldStartWith
 import org.antlr.v4.runtime.CharStreams
+import java.util.*
+import kotlin.collections.HashMap
 
 class TestFuzz : StringSpec({
     "should not modify blocks without fuzz" {
@@ -51,7 +53,7 @@ int ?test = 1;
         val fuzzedSource: String = fuzzBlock(source)
         fuzzedSource shouldNotBe source
     }
-    "should map fuzzed identifiers with same id to same replacement id" {
+    "f:should map fuzzed identifiers with same id to same replacement id" {
         val source = """
 public class Main {
     public static void main() {
@@ -63,15 +65,16 @@ public class Main {
             {
                 boolean ?guess;
                 ?guess = false;
-                if (guess) {
+                if (?guess) {
                     ?identifier = 10000;
                 }
             }
-            boolean ?guess = (true && false || true && (1 ?= 2));
+            boolean ?guess = (true && false || true && (?test ?= 2.0));
             ?test += ?identifier + ?test;
         }
         ?identifier *= ?identifier;
-        int ?some_number = (int) (Math.random() * j);
+        int ?some_number;
+        ?some_number = (int) (Math.random() * j);
         boolean k = (i ?= j && i ?= j) ? true : false;
     }
 }
@@ -95,6 +98,17 @@ public class Main {
         variables.values.size shouldBe 5 //This is not 100% guaranteed to pass (must be able to generate unique ids)
         val variableFrequencies = variables.values.toMutableList()
         variableFrequencies.sort()
-        variableFrequencies shouldBe mutableListOf(1, 1, 2, 3, 5)
+        variableFrequencies shouldBe mutableListOf(1, 2, 3, 4, 5)
+        println(fuzzedSource)
     }
+    /*"Documentation should make sense" {
+        val source = """
+int ?identifier = 1;
+
+if (?identifier ?= 1) {
+    System.out.println("cs125 rocks!");
+}
+""".trim()
+        val fuzzedSource = fuzzBlock(source)
+    }*/
 })
