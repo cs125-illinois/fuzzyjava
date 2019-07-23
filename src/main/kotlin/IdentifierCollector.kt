@@ -3,8 +3,14 @@ package edu.illinois.cs.cs125.fuzzyjava
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParserBaseListener
 
+//Namespaces
+internal const val CLASS = "CLASS"
+internal const val VARIABLE = "VARIABLE"
+internal const val ENUM = "ENUM"
+internal const val METHOD = "METHOD"
+
 class IdentifierCollector: FuzzyJavaParserBaseListener() {
-    private val identifiers: MutableSet<String> = mutableSetOf()
+    private val identifiers: MutableSet<Pair<String, String>> = mutableSetOf()
 
     /**
      * Enter event method that is called when the parse tree walker visits an variableDeclaratorId context.
@@ -15,7 +21,7 @@ class IdentifierCollector: FuzzyJavaParserBaseListener() {
     @Override
     override fun enterVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
         if (ctx.IDENTIFIER() != null) {
-            identifiers.add(ctx.IDENTIFIER().text)
+            identifiers.add(Pair(VARIABLE, ctx.IDENTIFIER().text))
         }
     }
     /**
@@ -27,12 +33,12 @@ class IdentifierCollector: FuzzyJavaParserBaseListener() {
     @Override
     override fun enterPrimary(ctx: FuzzyJavaParser.PrimaryContext) {
         if (ctx.IDENTIFIER() != null) {
-            identifiers.add(ctx.IDENTIFIER().text)
+            identifiers.add(Pair(VARIABLE,ctx.IDENTIFIER().text))
         }
     }
 
-    fun getIdentifiers(): Set<String> {
-        val toReturn = identifiers.map { String(it.toCharArray()) }.toSet() //Todo: Find a better way to deep copy
+    fun getIdentifiers(): Set<Pair<String, String>> {
+        val toReturn = identifiers.toSet() //Todo: Find a better way to deep copy
         identifiers.clear()
         return toReturn
     }
