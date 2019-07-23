@@ -53,12 +53,12 @@ int ?test = 1;
         val fuzzedSource: String = fuzzBlock(source)
         fuzzedSource shouldNotBe source
     }
-    "f:should map fuzzed identifiers with same id to same replacement id" {
+    "should map fuzzed identifiers with same id to same replacement id" {
         val source = """
 public class Main {
     public static void main() {
-        int i = 0;
-        int j = 10;
+        int cs125Id_0 = 0;
+        int cs125Id_3 = 10;
         int ?identifier = 0;
         {
             float ?test = 1.0;
@@ -70,7 +70,7 @@ public class Main {
                 }
             }
             boolean ?guess = (true && false || true && (?test ?= 2.0));
-            ?test += ?identifier + ?test;
+            ?test += (float) ?identifier + ?test;
         }
         ?identifier *= ?identifier;
         int ?some_number;
@@ -88,18 +88,16 @@ public class Main {
         val parsedTokens = javaLexer.allTokens.map {
             it.text
         }.filter {
-            it.startsWith("cs125")
+            it.matches("cs125Id_[0-9]+".toRegex()) //Todo: Will have to change this check when we know the signature of the ids we wish to generate
         }
 
         for (token in parsedTokens) {
             variables[token] = variables.getOrDefault(token,0) + 1
         }
-
-        variables.values.size shouldBe 5 //This is not 100% guaranteed to pass (must be able to generate unique ids)
+        variables.values.size shouldBe 7 //Two of these is a non-fuzzy variable
         val variableFrequencies = variables.values.toMutableList()
         variableFrequencies.sort()
-        variableFrequencies shouldBe mutableListOf(1, 2, 3, 4, 5)
-        println(fuzzedSource)
+        variableFrequencies shouldBe mutableListOf(1, 1, 1, 2, 3, 4, 5)
     }
     /*"Documentation should make sense" {
         val source = """

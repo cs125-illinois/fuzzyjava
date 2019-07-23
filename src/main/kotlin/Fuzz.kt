@@ -12,7 +12,7 @@ import kotlin.collections.HashMap
 typealias Scopes = Stack<MutableMap<String, String>> //Todo: This mapping might change (key values could be set or map of RuleContexts)
 
 const val FUZZY_COMPARISON = "?="
-private val documenter = Documenter()
+//private val documenter = Documenter()
 
 data class SourceModification(
         var startLine: Int,
@@ -24,10 +24,45 @@ data class SourceModification(
 )
 
 data class FuzzConfiguration(
+        private val source: String,
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
-        val fuzzyIdentifierTargets: List<String> = getIDs() //Todo: Find a better way to implement this
+        val fuzzyIdentifierTargets:IdSupplier = IdSupplier(source) //Todo: Possibly find a better way to implement this
+) {
+    /**
+     * A class that lazily generates an infinite sequence of ids
+     */
+    class IdSupplier(private val source: String) {
+        private var definedIdentifiers:Set<String> = setOf()
+        private var sequence = Sequence { object : Iterator<String> {
+            val identifierPrefix = "cs125Id_" // Todo: Will probably end up changing this
+            var next = 0 // start at -1 so first number used is 0
+            override fun hasNext(): Boolean {return true}
+            override fun next(): String {
+                return identifierPrefix + next++
+            }
+        } }
 
-)
+        val nextId: String
+            get() {
+                if (definedIdentifiers.isEmpty()) {
+                    //Gets all of the non-fuzzy identifiers.
+                    //Source always made into block because it does not matter for collecting identifiers
+                    val fuzzyJavaParseTree = parseFuzzyJava("""{
+$source
+}""").block()
+                    val idCollector = IdentifierCollector() //Identifiers include class names, methods names, variable names, etc.
+                    val walker = ParseTreeWalker()
+                    walker.walk(idCollector, fuzzyJavaParseTree)
+                    definedIdentifiers = idCollector.getIdentifiers()
+                    sequence = sequence.filter { it !in definedIdentifiers }
+                }
+                val newId = sequence.first()
+                sequence = sequence.drop(1)
+                return newId
+            }
+
+    }
+}
 
 //Todo: Better class description
 /**
@@ -36,12 +71,8 @@ data class FuzzConfiguration(
 class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
     /**Keeps track of the members defined in particular scopes.*/
     private var scopes = Scopes()
-    /**Keeps track of non-fuzzy identifiers.*/
-    private var definedIdentifiers: MutableSet<String> = mutableSetOf() //Identifiers include class names, methods names, variable names, etc.
     /**Keeps track of the modifications made so they can be applied.*/
     internal val sourceModifications: MutableSet<SourceModification> = mutableSetOf() // Added internal modifier because encapsulation and can't make the member private.
-
-
     /**
      * Enter event method that is called when the parse tree walker visits an expression context.
      *
@@ -100,14 +131,14 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     override fun exitVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
         // Will only generate docs for fuzzy variables who are fields
         //Todo: Does it make sense too add nullablity check for parent? Would this event even trigger if that were the case?
-        if (ctx.FUZZYIDENTIFIER() == null || (ctx.parent.parent !is JavaParser.FieldDeclarationContext)) {
+        if (ctx.FUZZYIDENTIFIER() == null || (ctx.parent.parent !is FuzzyJavaParser.FieldDeclarationContext)) {
             return
         }
-        val fuzzyVariableToken = ctx.FUZZYIDENTIFIER().symbol
+        /*val fuzzyVariableToken = ctx.FUZZYIDENTIFIER().symbol
         // Todo: Do listeners exit in the same order they entered? Make sure that extracted variable is correct
         val modification:SourceModification = sourceModifications.first { it.startLine == fuzzyVariableToken.line }
 
-        documenter.addModification(modification) // Todo: Check when the modifications are applied
+        documenter.addModification(modification) // Todo: Check when the modifications are applied*/
     }
     /**
      * Enter event method that is called when the parse tree walker visits an primary context.
@@ -132,14 +163,11 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
         val endLine = fuzzyIdentifier.line
         val startColumn = fuzzyIdentifier.charPositionInLine
         val endColumn = startColumn + fuzzyIdentifier.text.length
-        var replacement = configuration.fuzzyIdentifierTargets.random()
+        // Find all of the scopes that contain this fuzzy id
+        val scopesWithFuzzyId = scopes.filter { it.containsKey(fuzzyIdentifier.text) }
+        // If the fuzzy id has not already been defined in scope, generate a new id, otherwise, map it to the identifier tof it's definition
+        val replacement = if (scopesWithFuzzyId.isEmpty()) configuration.fuzzyIdentifierTargets.nextId else scopesWithFuzzyId[0][fuzzyIdentifier.text]!!
 
-        for (scope in scopes) { // Checks if fuzzy variable has already been defined in this or a parent scope
-            if (scope.containsKey(fuzzyIdentifier.text)) {
-                replacement = scope[fuzzyIdentifier.text]!! //Todo: Figure out how to get around this
-                break
-            }
-        }
         scopes[scopes.size - 1][fuzzyIdentifier.text] = replacement
         sourceModifications.add(SourceModification(
                 startLine, startColumn, endLine, endColumn, fuzzyIdentifier.text, replacement
@@ -190,30 +218,10 @@ fun Set<SourceModification>.apply(source: String): String {
         unappliedModifications.remove(currentModification)
     }
 
-    documenter.inspectModifications()
+    //documenter.inspectModifications()
 
     return modifiedSource.joinToString(separator = "\n")
 }
-
-private fun getIDs(): List<String> {
-    var sequence = Sequence { object : Iterator<Int> {
-        var next = 0
-        override fun hasNext(): Boolean {return true}
-        override fun next(): Int {return next++}
-    } }
-
-    val nextInt = sequence.first()
-    sequence = sequence.drop(1)
-
-
-    val poolOfIdentifiers: MutableList<String> = mutableListOf()
-    for (number in 0..10000) {
-        val newId = "cs125".plus(UUID.randomUUID().toString().replace("-", "_"))
-        poolOfIdentifiers.add(newId)
-    }
-    return poolOfIdentifiers
-}
-
 /**
  * Fuzzes a "block" of template code.
  *
@@ -221,7 +229,8 @@ private fun getIDs(): List<String> {
  * @param fuzzConfiguration - The config that will be used to modify the block.
  * @return Returns a block of Java code.
  */
-fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
+//passed the source code to default of fuzz config so IdSupplier can get all of the non-fuzzy identifiers
+fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration(block)): String {
     val fuzzyJavaParseTree = parseFuzzyJava("""{
 $block
 }""").block()
@@ -251,7 +260,8 @@ $modifiedSource
  * @param fuzzConfiguration - The config that will be used to modify the unit.
  * @return Returns a unit of Java code.
  */
-fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
+//passed the source code to default of fuzz config so IdSupplier can get all of the non-fuzzy identifiers
+fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration(unit)): String {
     val fuzzyJavaParseTree = parseFuzzyJava(unit).compilationUnit()
 
     val fuzzer = Fuzzer(fuzzConfiguration)
@@ -268,9 +278,9 @@ $modifiedSource
     return modifiedSource
 }
 
-fun getDocumentationOfProblem(): String {
+/*fun getDocumentationOfProblem(): String {
     return "";//documenter.getInspectionResults() //Todo: uncomment this
-}
+}*/
 
 //Todo: Better docs for code below
 /**
