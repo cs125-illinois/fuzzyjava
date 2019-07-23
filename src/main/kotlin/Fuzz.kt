@@ -24,45 +24,11 @@ data class SourceModification(
 )
 
 data class FuzzConfiguration(
-        private val source: String,
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
-        val fuzzyIdentifierTargets:IdSupplier = IdSupplier(source) //Todo: Possibly find a better way to implement this
-) {
-    /**
-     * A class that lazily generates an infinite sequence of ids
-     */
-    class IdSupplier(private val source: String) {
-        private var definedIdentifiers:Set<String> = setOf()
-        private var sequence = Sequence { object : Iterator<String> {
-            val identifierPrefix = "cs125Id_" // Todo: Will probably end up changing this
-            var next = 0 // start at -1 so first number used is 0
-            override fun hasNext(): Boolean {return true}
-            override fun next(): String {
-                return identifierPrefix + next++
-            }
-        } }
-
-        val nextId: String
-            get() {
-                if (definedIdentifiers.isEmpty()) {
-                    //Gets all of the non-fuzzy identifiers.
-                    //Source always made into block because it does not matter for collecting identifiers
-                    val fuzzyJavaParseTree = parseFuzzyJava("""{
-$source
-}""").block()
-                    val idCollector = IdentifierCollector() //Identifiers include class names, methods names, variable names, etc.
-                    val walker = ParseTreeWalker()
-                    walker.walk(idCollector, fuzzyJavaParseTree)
-                    definedIdentifiers = idCollector.getIdentifiers()
-                    sequence = sequence.filter { it !in definedIdentifiers }
-                }
-                val newId = sequence.first()
-                sequence = sequence.drop(1)
-                return newId
-            }
-
-    }
-}
+        // Default is null because we do not know if the user will provide targets, and if not,
+        // we need to collect all of the non-fuzzy variables before creating and IdSupplier instance
+        var fuzzyIdentifierTargets: IdSupplier? = null //Todo: Possibly find a better way to implement this
+)
 
 //Todo: Better class description
 /**
@@ -166,7 +132,7 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
         // Find all of the scopes that contain this fuzzy id
         val scopesWithFuzzyId = scopes.filter { it.containsKey(fuzzyIdentifier.text) }
         // If the fuzzy id has not already been defined in scope, generate a new id, otherwise, map it to the identifier tof it's definition
-        val replacement = if (scopesWithFuzzyId.isEmpty()) configuration.fuzzyIdentifierTargets.nextId else scopesWithFuzzyId[0][fuzzyIdentifier.text]!!
+        val replacement = if (scopesWithFuzzyId.isEmpty()) configuration.fuzzyIdentifierTargets!!.nextId else scopesWithFuzzyId[0][fuzzyIdentifier.text]!!
 
         scopes[scopes.size - 1][fuzzyIdentifier.text] = replacement
         sourceModifications.add(SourceModification(
@@ -230,14 +196,19 @@ fun Set<SourceModification>.apply(source: String): String {
  * @return Returns a block of Java code.
  */
 //passed the source code to default of fuzz config so IdSupplier can get all of the non-fuzzy identifiers
-fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration(block)): String {
+fun fuzzBlock(block: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
     val fuzzyJavaParseTree = parseFuzzyJava("""{
 $block
 }""").block()
-
+    val idCollector = IdentifierCollector()
     val fuzzer = Fuzzer(fuzzConfiguration)
     val walker = ParseTreeWalker()
-    walker.walk(fuzzer, fuzzyJavaParseTree)
+
+    walker.walk(idCollector, fuzzyJavaParseTree) //Pass to collect non-fuzzy ids
+    if (fuzzConfiguration.fuzzyIdentifierTargets == null) { // In case the user does not provide any identifier targets
+        fuzzConfiguration.fuzzyIdentifierTargets = IdSupplier(idCollector.getIdentifiers())
+    }
+    walker.walk(fuzzer, fuzzyJavaParseTree) // Pass to fuzz source
 
     val sourceModifications = fuzzer.sourceModifications.map {
         assert(it.startLine > 1 && it.endLine > 1)
@@ -261,12 +232,17 @@ $modifiedSource
  * @return Returns a unit of Java code.
  */
 //passed the source code to default of fuzz config so IdSupplier can get all of the non-fuzzy identifiers
-fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration(unit)): String {
+fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
     val fuzzyJavaParseTree = parseFuzzyJava(unit).compilationUnit()
-
+    val idCollector = IdentifierCollector()
     val fuzzer = Fuzzer(fuzzConfiguration)
     val walker = ParseTreeWalker()
-    walker.walk(fuzzer, fuzzyJavaParseTree)
+
+    walker.walk(idCollector, fuzzyJavaParseTree) //Pass to collect non-fuzzy ids
+    if (fuzzConfiguration.fuzzyIdentifierTargets == null) { // In case the user does not provide any identifier targets
+        fuzzConfiguration.fuzzyIdentifierTargets = IdSupplier(idCollector.getIdentifiers())
+    }
+    walker.walk(fuzzer, fuzzyJavaParseTree) // Pass to fuzz source
 
     val modifiedSource = fuzzer.sourceModifications.apply(unit)
 
