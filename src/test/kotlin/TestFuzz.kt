@@ -1,6 +1,5 @@
 package edu.illinois.cs.cs125.fuzzyjava
 
-import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
 import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
 import io.kotlintest.specs.StringSpec
 import io.kotlintest.*
@@ -8,9 +7,6 @@ import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.matchers.string.shouldEndWith
 import io.kotlintest.matchers.string.shouldStartWith
 import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.TokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
-import java.util.*
 import kotlin.collections.HashMap
 
 class TestFuzz : StringSpec({
@@ -73,7 +69,7 @@ public class Main {
                 }
             }
             boolean ?guess = (true && false || true && (?test ?= 2.0));
-            ?test += (float) ?identifier + ?test;
+            ?test += (float) ?identifier;
         }
         ?identifier *= ?identifier;
         int ?some_number;

@@ -24,14 +24,15 @@ const val FUZZY_COMPARISON = "?="
 
 //Todo: Better class descriptions
 /**
- * A class that listens for bookmarks fuzzy tokens.
+ * A class that listens for and bookmarks fuzzy tokensas well as what they map to.
  */
 class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
+    //enter and exit methods are in alphabetical order
     /**Keeps track of the members defined in particular scopes.*/
     private var scopes: Scopes = Scopes()
     /**Keeps track of the modifications made so they can be applied.*/
-    internal val sourceModifications: MutableList<Lazy<SourceModification>> = mutableListOf() // Added internal modifier because encapsulation and can't make the member private.
-
+    internal val sourceModifications: MutableList<Lazy<SourceModification>> = mutableListOf()
+    // Lazy because we need to allow for non-variable identifiers that are "used" before their definitions to map to the same generated id as their definitions
     /**
      * Enter event method that is called when the parse tree walker visits a block context.
      * Scope is partially maintained here.
@@ -76,19 +77,46 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     override fun exitClassDeclaration(ctx: FuzzyJavaParser.ClassDeclarationContext) {
         scopes.pop()
     }
+    /**
+     * Enter event method that is called when the parse tree walker visits a compilationUnit context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The compilationUnit context visited by the parse tree walker.
+     */
+    @Override
     override fun enterCompilationUnit(ctx: FuzzyJavaParser.CompilationUnitContext) {
         scopes.add(java.util.HashMap())
     }
+    /**
+     * Exit event method that is called when the parse tree walker visits an compilationUnit context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The compilationUnit context visited by the parse tree walker.
+     */
+    @Override
     override fun exitCompilationUnit(ctx: FuzzyJavaParser.CompilationUnitContext) {
         scopes.pop()
     }
+    /**
+     * Enter event method that is called when the parse tree walker visits a enumDeclaration context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The enumDeclaration context visited by the parse tree walker.
+     */
+    @Override
     override fun enterEnumDeclaration(ctx: FuzzyJavaParser.EnumDeclarationContext) {
         if (ctx.identifier().FUZZYIDENTIFIER() != null) {
             val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
     }
-
+    /**
+     * Enter event method that is called when the parse tree walker visits a enumConstant context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The classDeclaration context visited by the parse tree walker.
+     */
+    @Override
     override fun enterEnumConstant(ctx: FuzzyJavaParser.EnumConstantContext) {
         if (ctx.identifier().FUZZYIDENTIFIER() != null) {
             val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
@@ -138,16 +166,27 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
         // Find all of the scopes that contain this fuzzy id
         //val scopesWithFuzzyId = scopes.filter { it.containsKey(fuzzyIdentifier) }
     }
-
+    /**
+     * Enter event method that is called when the parse tree walker visits a interfaceDeclaration context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The interfaceDeclaration context visited by the parse tree walker.
+     */
+    @Override
     override fun enterInterfaceDeclaration(ctx: FuzzyJavaParser.InterfaceDeclarationContext) {
         if (ctx.identifier().FUZZYIDENTIFIER() != null) {
             val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
-            //scopes[0][name] = idSupplier.nextId
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
         scopes.add(java.util.HashMap())
     }
-
+    /**
+     * Exit event method that is called when the parse tree walker visits an interfaceDeclaration context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The interfaceDeclaration context visited by the parse tree walker.
+     */
+    @Override
     override fun exitInterfaceDeclaration(ctx: FuzzyJavaParser.InterfaceDeclarationContext?) {
         scopes.pop()
     }
@@ -175,7 +214,13 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     override fun exitMethodDeclaration(ctx: FuzzyJavaParser.MethodDeclarationContext) {
         scopes.pop()
     }
-
+    /**
+     * Enter event method that is called when the parse tree walker visits a variableDeclaratorId context.
+     * Scope is partially maintained here.
+     *
+     * @param ctx - The variableDeclaratorId context visited by the parse tree walker.
+     */
+    @Override
     override fun enterVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
         if (ctx.identifier().FUZZYIDENTIFIER() != null) {
             val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
@@ -183,7 +228,6 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
         }
     }
 }
-
 /**
  * A class that collects all of the user defined identifiers.
  *

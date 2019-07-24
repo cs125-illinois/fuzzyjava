@@ -6,7 +6,9 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.lang.Exception
 
 //Todo: Finish documenting this class
-
+/**
+ * A class that holds information about the modifications made while walking the parse tree.
+ */
 data class SourceModification(
         var startLine: Int,
         var startColumn: Int,
@@ -15,17 +17,18 @@ data class SourceModification(
         val content: String,
         val replace: String
 )
-
+/**
+ * A class that holds information about what to map fuzzy tokens to.
+ */
 data class FuzzConfiguration(
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
         // Default is null because we do not know if the user will provide targets, and if not,
         // we need to collect all of the non-fuzzy variables before creating and IdSupplier instance
         var fuzzyIdentifierTargets: IdSupplier? = null //Todo: Possibly find a better way to implement this
 )
-
-//Todo: Better Documentation for this method.
 /**
  * Method used to apply the modifications
+ *
  * @param source - The source code that will be modified.
  * @return Returns the modified source code.
  */
@@ -65,8 +68,6 @@ fun Set<SourceModification>.apply(source: String): String {
         unappliedModifications.remove(currentModification)
     }
 
-    //documenter.inspectModifications()
-
     return modifiedSource.joinToString(separator = "\n")
 }
 /**
@@ -104,7 +105,6 @@ $modifiedSource
     //println(getDocumentationOfProblem() + "\n\n")
     return modifiedSource
 }
-
 /**
  * Fuzzes a "unit" of template code.
  *
@@ -134,11 +134,6 @@ $modifiedSource
     //println(getDocumentationOfProblem() + "\n\n")
     return modifiedSource
 }
-
-/*fun getDocumentationOfProblem(): String {
-    return "";//documenter.getInspectionResults() //Todo: uncomment this
-}*/
-
 //Todo: Better docs for code below
 /**
  * Used to check if code adheres to the template language syntax.
@@ -152,14 +147,12 @@ internal fun parseFuzzyJava(source: String): FuzzyJavaParser {
     val tokenStream = CommonTokenStream(fuzzyJavaLexer)
     return FuzzyJavaParser(tokenStream)
 }
-
 /**
  * A class that holds information about what went wrong while parsing Java code.
  */
 class JavaParseError(
         val line: Int, val column: Int, message: String
 ) : Exception(message)
-
 /**
  * A class that creates a Java Listener.
  */
@@ -180,7 +173,6 @@ private class JavaErrorListener : BaseErrorListener() {
         throw JavaParseError(line, charPositionInLine, msg)
     }
 }
-
 /**
  * Parses Java code.
  *

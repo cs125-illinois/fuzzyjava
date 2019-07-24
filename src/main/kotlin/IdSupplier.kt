@@ -20,7 +20,6 @@ class IdSupplier(private val definedIdentifiers: Set<Pair<String, String>>) {
             Pair(METHOD, it) !in definedIdentifiers &&
             Pair(VARIABLE, it) !in definedIdentifiers
     }
-
     /**
      * Getter method for the next identifier in the [sequence].
      *
