@@ -74,7 +74,7 @@ variableModifier
     ;
 
 classDeclaration
-    : CLASS IDENTIFIER typeParameters?
+    : CLASS identifier typeParameters?
       (EXTENDS typeType)?
       (IMPLEMENTS typeList)?
       classBody
@@ -93,7 +93,7 @@ typeBound
     ;
 
 enumDeclaration
-    : ENUM IDENTIFIER (IMPLEMENTS typeList)? '{' enumConstants? ','? enumBodyDeclarations? '}'
+    : ENUM identifier (IMPLEMENTS typeList)? '{' enumConstants? ','? enumBodyDeclarations? '}' //Todo: Do we want to fuzz this as well
     ;
 
 enumConstants
@@ -101,7 +101,7 @@ enumConstants
     ;
 
 enumConstant
-    : annotation* IDENTIFIER arguments? classBody?
+    : annotation* identifier arguments? classBody?
     ;
 
 enumBodyDeclarations
@@ -109,7 +109,7 @@ enumBodyDeclarations
     ;
 
 interfaceDeclaration
-    : INTERFACE IDENTIFIER typeParameters? (EXTENDS typeList)? interfaceBody
+    : INTERFACE identifier typeParameters? (EXTENDS typeList)? interfaceBody
     ;
 
 classBody
@@ -144,7 +144,7 @@ memberDeclaration
    for invalid return type after parsing.
  */
 methodDeclaration
-    : typeTypeOrVoid IDENTIFIER formalParameters ('[' ']')*
+    : typeTypeOrVoid identifier formalParameters ('[' ']')*
       (THROWS qualifiedNameList)?
       methodBody
     ;
@@ -168,7 +168,7 @@ genericConstructorDeclaration
     ;
 
 constructorDeclaration
-    : IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody=block
+    : IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody=block // Todo: do we want to fuzz this, if so, could make the same as class
     ;
 
 fieldDeclaration
@@ -195,14 +195,14 @@ constDeclaration
     ;
 
 constantDeclarator
-    : IDENTIFIER ('[' ']')* '=' variableInitializer
+    : IDENTIFIER ('[' ']')* '=' variableInitializer // Todo: do we want to fuzz this, if so, could make the same as variable
     ;
 
 // see matching of [] comment in methodDeclaratorRest
 // methodBody from Java8
 interfaceMethodDeclaration
     : interfaceMethodModifier* (typeTypeOrVoid | typeParameters annotation* typeTypeOrVoid)
-      IDENTIFIER formalParameters ('[' ']')* (THROWS qualifiedNameList)? methodBody
+      IDENTIFIER formalParameters ('[' ']')* (THROWS qualifiedNameList)? methodBody // Todo: do we want to fuzz this, if so, could make the same as method
     ;
 
 // Java8
@@ -228,8 +228,7 @@ variableDeclarator
     ;
 
 variableDeclaratorId
-    : IDENTIFIER ('[' ']')*
-    | FUZZYIDENTIFIER
+    : identifier ('[' ']')*
     ;
 
 variableInitializer
@@ -242,7 +241,7 @@ arrayInitializer
     ;
 
 classOrInterfaceType
-    : IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)*
+    : IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)* // Todo: do we want to fuzz this
     ;
 
 typeArgument
@@ -272,7 +271,7 @@ lastFormalParameter
     ;
 
 qualifiedName
-    : IDENTIFIER ('.' IDENTIFIER)*
+    : IDENTIFIER ('.' IDENTIFIER)* // Todo: do we want to fuzz this
     ;
 
 literal
@@ -307,7 +306,7 @@ elementValuePairs
     ;
 
 elementValuePair
-    : IDENTIFIER '=' elementValue
+    : IDENTIFIER '=' elementValue // Todo: do we want to fuzz this
     ;
 
 elementValue
@@ -432,7 +431,7 @@ switchBlockStatementGroup
     ;
 
 switchLabel
-    : CASE (constantExpression=expression | enumConstantName=IDENTIFIER) ':'
+    : CASE (constantExpression=expression | enumConstantName=IDENTIFIER) ':' // Todo: do we want to fuzz the enumConstName part, if so, can treat the same as enum const
     | DEFAULT ':'
     ;
 
@@ -461,7 +460,7 @@ expressionList
     ;
 
 methodCall
-    : IDENTIFIER '(' expressionList? ')'
+    : identifier '(' expressionList? ')' //
     | THIS '(' expressionList? ')'
     | SUPER '(' expressionList? ')'
     ;
@@ -469,7 +468,7 @@ methodCall
 expression
     : primary
     | expression bop='.'
-      ( IDENTIFIER
+      ( identifier
       | methodCall
       | THIS
       | NEW nonWildcardTypeArguments? innerCreator
@@ -502,7 +501,7 @@ expression
     | lambdaExpression // Java8
 
     // Java 8 methodReference
-    | expression '::' typeArguments? IDENTIFIER
+    | expression '::' typeArguments? IDENTIFIER // Todo: do we want to fuzz this
     | typeType '::' (typeArguments? IDENTIFIER | NEW)
     | classType '::' typeArguments? NEW
     ;
@@ -514,7 +513,7 @@ lambdaExpression
 
 // Java8
 lambdaParameters
-    : IDENTIFIER
+    : IDENTIFIER //Todo: Do we want to fuzz this
     | '(' formalParameterList? ')'
     | '(' IDENTIFIER (',' IDENTIFIER)* ')'
     ;
@@ -530,8 +529,7 @@ primary
     | THIS
     | SUPER
     | literal
-    | FUZZYIDENTIFIER
-    | IDENTIFIER
+    | identifier
     | typeTypeOrVoid '.' CLASS
     | nonWildcardTypeArguments (explicitGenericInvocationSuffix | THIS arguments)
     ;
@@ -546,12 +544,12 @@ creator
     ;
 
 createdName
-    : IDENTIFIER typeArgumentsOrDiamond? ('.' IDENTIFIER typeArgumentsOrDiamond?)*
+    : identifier typeArgumentsOrDiamond? ('.' identifier typeArgumentsOrDiamond?)* // identifier here treated the same as class
     | primitiveType
     ;
 
 innerCreator
-    : IDENTIFIER nonWildcardTypeArgumentsOrDiamond? classCreatorRest
+    : identifier nonWildcardTypeArgumentsOrDiamond? classCreatorRest // identifier here treated the same as class
     ;
 
 arrayCreatorRest
@@ -605,7 +603,7 @@ typeArguments
 
 superSuffix
     : arguments
-    | '.' IDENTIFIER arguments?
+    | '.' IDENTIFIER arguments? //Todo: Do we want to fuzz this
     ;
 
 explicitGenericInvocationSuffix
@@ -615,4 +613,9 @@ explicitGenericInvocationSuffix
 
 arguments
     : '(' expressionList? ')'
+    ;
+
+identifier
+    : IDENTIFIER
+    | FUZZYIDENTIFIER
     ;
