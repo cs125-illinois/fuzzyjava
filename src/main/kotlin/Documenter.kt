@@ -1,8 +1,8 @@
 package edu.illinois.cs.cs125.fuzzyjava
 
-const val AUTHOR: String = "@author"
-const val PARAMETER: String = "@param"
-const val RETURN: String = "@return"
+private const val AUTHOR: String = "@author"
+private const val PARAMETER: String = "@param"
+private const val RETURN: String = "@return"
 
 /**
  * A class that takes the modifications from generating a variant and documents the code.
