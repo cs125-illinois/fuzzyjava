@@ -28,6 +28,7 @@ boolean k = (i ?= j && i ?= j);
         fuzzedSource.lines()[2] shouldStartWith ("boolean k = (i")
         fuzzedSource.lines()[2] shouldContain "j && i"
         fuzzedSource.lines()[2] shouldEndWith ("j);")
+        println(fuzzedSource)
     }
     "should implement fuzzy comparisons on compilation units" {
         val source = """
@@ -44,15 +45,7 @@ public class Main {
         fuzzedSource.lines()[4] shouldContain "j && i"
         fuzzedSource.lines()[4] shouldEndWith ("j);")
     }
-    "should recognize and replace fuzzy identifiers" {
-        val source = """
-int ?identifier;
-int ?test = 1;
-        """.trim()
-        val fuzzedSource: String = fuzzBlock(source)
-        fuzzedSource shouldNotBe source
-    }
-    "should map fuzzed identifiers with same id to same replacement id" {
+    "should implement fuzzy variable identifiers on compilation units" {
         val source = """
 public class Main {
     public static void main() {
@@ -65,11 +58,12 @@ public class Main {
                 boolean ?guess;
                 ?guess = false;
                 if (?guess) {
+                    float ?test = 2.0;
                     ?identifier = 10000;
                 }
             }
             boolean ?guess = (true && false || true && (?test ?= 2.0));
-            ?test += (float) ?identifier;
+            ?test += (float) ?identifier + ?test;
         }
         ?identifier *= ?identifier;
         int ?some_number;
@@ -93,12 +87,12 @@ public class Main {
             variables[token] = variables.getOrDefault(token,0) + 1
         }
         println(fuzzedSource)
-        variables.values.size shouldBe 7 //Two of these is a non-fuzzy variable
+        variables.values.size shouldBe 8 //Two of these is a non-fuzzy variable
         val variableFrequencies = variables.values.toMutableList()
         variableFrequencies.sort()
-        variableFrequencies shouldBe mutableListOf(1, 1, 1, 2, 3, 4, 5)
-    }
-    "f:should fuzz method identifiers and parameters" {//Todo still have to test for method call before declaration
+        variableFrequencies shouldBe mutableListOf(1, 1, 1, 1, 2, 3, 4, 5)
+    }// Todo: figure out a better way to test these inputs
+    "should implement fuzzy method identifiers on compilation units" {
         val source = """
 //non-fuzzy ids = {0, 1, 3, 4, 6}
 public class Main {
@@ -132,7 +126,52 @@ public class Main {
 }
 """.trim()
         val fuzzedSource = fuzzCompilationUnit(source)
-        println("\n$fuzzedSource")
         fuzzedSource shouldNotBe source
+        println(fuzzedSource)
+    }
+    "should implement fuzzy class identifies on compilation units" {
+        val source = """
+public class Main {
+    public static void main() {
+        String ?name = "CS";
+        int ?age = 125;
+        ?class ?object = new ?class(?name, ?age);
+        System.out.println("Name: " + ?object.?getName());
+        System.out.println("Age: " + ?object.?getAge());
+        
+        ?object.?setName("CS");
+        ?object.?setAge(173);
+        System.out.println(?object);
+    }
+    class ?class {
+        private String ?field1;
+        private int ?field2;
+        ?class(final String ?field1, final int ?field2) {
+            this.?field1 = ?field1;
+            this.?field2 = ?field2;
+        }
+        String ?getName() {
+            return ?field1;
+        }
+        int ?getAge() {
+            return ?field2;
+        }
+        void ?setName(final String ?newName) {
+            ?field1 = ?newName;
+        }
+        void ?setAge(final int ?newAge) {
+            ?field2 = ?newAge;
+        }
+        
+        @Override
+        public String toString() {
+            return "Name: " + ?field1 + "\nAge: " + ?field2;
+        }
+    }
+}
+""".trim()
+        val fuzzedSource = fuzzCompilationUnit(source)
+        fuzzedSource shouldNotBe source
+        println(fuzzedSource)
     }
 })

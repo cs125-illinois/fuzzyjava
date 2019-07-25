@@ -65,17 +65,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
             val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
-        scopes.add(java.util.HashMap())
-    }
-    /**
-     * Exit event method that is called when the parse tree walker visits an classDeclaration context.
-     * Scope is partially maintained here.
-     *
-     * @param ctx - The classDeclaration context visited by the parse tree walker.
-     */
-    @Override
-    override fun exitClassDeclaration(ctx: FuzzyJavaParser.ClassDeclarationContext) {
-        scopes.pop()
+        //We do not push a new "scope" onto the stack because the methods within a class need to be visible to outer scopes
+        //If they try to use a private fuzzed method or a fuzzed method from a private class then we delegate that error to the compiler
     }
     /**
      * Enter event method that is called when the parse tree walker visits a compilationUnit context.

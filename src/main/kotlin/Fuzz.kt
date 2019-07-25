@@ -92,9 +92,9 @@ $block
     }
     walker.walk(fuzzer, fuzzyJavaParseTree) // Pass to fuzz source
     //sourceModifications.map { it.value }.toSet()
-    val sourceModifications = fuzzer.sourceModifications.map {
-        assert(it.value.startLine > 1 && it.value.endLine > 1)
-        it.value.copy(startLine = it.value.startLine - 1, endLine = it.value.endLine - 1)
+    val sourceModifications = fuzzer.sourceModifications.map { it.value }.map {
+        assert(it.startLine > 1 && it.endLine > 1)
+        it.copy(startLine = it.startLine - 1, endLine = it.endLine - 1)
     }.toSet()
     val modifiedSource = sourceModifications.apply(block)
 

@@ -168,7 +168,7 @@ genericConstructorDeclaration
     ;
 
 constructorDeclaration
-    : IDENTIFIER formalParameters (THROWS qualifiedNameList)? constructorBody=block // Todo: do we want to fuzz this, if so, could make the same as class
+    : identifier formalParameters (THROWS qualifiedNameList)? constructorBody=block
     ;
 
 fieldDeclaration
@@ -241,7 +241,7 @@ arrayInitializer
     ;
 
 classOrInterfaceType
-    : IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments?)* // Todo: do we want to fuzz this
+    : identifier typeArguments? ('.' identifier typeArguments?)*
     ;
 
 typeArgument
