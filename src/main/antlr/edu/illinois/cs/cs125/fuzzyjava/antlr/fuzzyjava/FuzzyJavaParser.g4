@@ -297,7 +297,7 @@ floatLiteral
     ;
 
 fuzzyLiteral
-    : FUZZY_LITERAL ASSIGN IDENTIFIER
+    : FUZZY_LITERAL ASSIGN IDENTIFIER //Had to add assign becasue it would match this as a fuzzy id
     ;
 
 // ANNOTATIONS
