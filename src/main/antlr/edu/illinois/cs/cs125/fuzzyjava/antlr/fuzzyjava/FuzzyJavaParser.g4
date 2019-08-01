@@ -277,6 +277,7 @@ qualifiedName
 literal
     : integerLiteral
     | floatLiteral
+    | fuzzyLiteral
     | CHAR_LITERAL
     | STRING_LITERAL
     | BOOL_LITERAL
@@ -293,6 +294,10 @@ integerLiteral
 floatLiteral
     : FLOAT_LITERAL
     | HEX_FLOAT_LITERAL
+    ;
+
+fuzzyLiteral
+    : FUZZY_LITERAL ASSIGN IDENTIFIER
     ;
 
 // ANNOTATIONS
@@ -465,8 +470,14 @@ methodCall
     | SUPER '(' expressionList? ')'
     ;
 
+
+fuzzyComparison
+    : FUZZY_COMPARISON IDENTIFIER QUESTION
+    ;
+
 expression
     : primary
+    | expression fuzzyComparison expression
     | expression bop='.'
       ( identifier
       | methodCall
@@ -488,7 +499,6 @@ expression
     | expression bop=('<=' | '>=' | '>' | '<') expression
     | expression bop=INSTANCEOF typeType
     | expression bop=('==' | '!=') expression
-    | expression bop=FUZZYCOMPARISON expression
     | expression bop='&' expression
     | expression bop='^' expression
     | expression bop='|' expression
@@ -617,5 +627,5 @@ arguments
 
 identifier
     : IDENTIFIER
-    | FUZZYIDENTIFIER
+    | FUZZY_IDENTIFIER
     ;
