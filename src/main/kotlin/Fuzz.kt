@@ -10,6 +10,7 @@ import java.lang.Exception
  * A class that holds information about the modifications made while walking the parse tree.
  */
 data class SourceModification(
+        var identifier: String,
         var startLine: Int,
         var startColumn: Int,
         var endLine: Int,
@@ -24,7 +25,8 @@ data class FuzzConfiguration(
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
         // Default is null because we do not know if the user will provide targets, and if not,
         // we need to collect all of the non-fuzzy variables before creating and IdSupplier instance
-        var fuzzyIdentifierTargets: IdSupplier? = null //Todo: Possibly find a better way to implement this
+        var fuzzyIdentifierTargets: IdSupplier? = null,
+        var fuzzyLiteralTargets: LiteralSupplier? = null
 )
 /**
  * Method used to apply the modifications
@@ -90,9 +92,14 @@ $block
         walker.walk(idCollector, fuzzyJavaParseTree) //Pass to collect non-fuzzy ids
         fuzzConfiguration.fuzzyIdentifierTargets = IdSupplier(idCollector.getIdentifiers())
     }
+    assert(fuzzConfiguration.fuzzyIdentifierTargets != null)
+    if (fuzzConfiguration.fuzzyLiteralTargets == null) {
+        fuzzConfiguration.fuzzyLiteralTargets = LiteralSupplier()
+    }
+    assert(fuzzConfiguration.fuzzyLiteralTargets != null)
     walker.walk(fuzzer, fuzzyJavaParseTree) // Pass to fuzz source
     //sourceModifications.map { it.value }.toSet()
-    val sourceModifications = fuzzer.sourceModifications.map { it.value }.map {
+    val sourceModifications: Set<SourceModification> = fuzzer.sourceModifications.map { it.value }.map {
         assert(it.startLine > 1 && it.endLine > 1)
         it.copy(startLine = it.startLine - 1, endLine = it.endLine - 1)
     }.toSet()
@@ -123,6 +130,11 @@ fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = Fuz
         walker.walk(idCollector, fuzzyJavaParseTree) //Pass to collect non-fuzzy ids
         fuzzConfiguration.fuzzyIdentifierTargets = IdSupplier(idCollector.getIdentifiers())
     }
+    assert(fuzzConfiguration.fuzzyIdentifierTargets != null)
+    if (fuzzConfiguration.fuzzyLiteralTargets == null) {
+        fuzzConfiguration.fuzzyLiteralTargets = LiteralSupplier()
+    }
+    assert(fuzzConfiguration.fuzzyLiteralTargets != null)
     walker.walk(fuzzer, fuzzyJavaParseTree) // Pass to fuzz source
 
     val modifiedSource = fuzzer.sourceModifications.map { it.value }.toSet().apply(unit)

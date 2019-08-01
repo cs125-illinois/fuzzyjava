@@ -61,8 +61,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterClassDeclaration(ctx: FuzzyJavaParser.ClassDeclarationContext) {
-        if (ctx.identifier().FUZZYIDENTIFIER() != null) {
-            val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
+        if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
+            val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
         //We do not push a new "scope" onto the stack because the methods within a class need to be visible to outer scopes
@@ -96,8 +96,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterEnumDeclaration(ctx: FuzzyJavaParser.EnumDeclarationContext) {
-        if (ctx.identifier().FUZZYIDENTIFIER() != null) {
-            val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
+        if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
+            val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
     }
@@ -109,24 +109,36 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterEnumConstant(ctx: FuzzyJavaParser.EnumConstantContext) {
-        if (ctx.identifier().FUZZYIDENTIFIER() != null) {
-            val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
+        if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
+            val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
     }
     /**
-     * Enter event method that is called when the parse tree walker visits an expression context.
+     * Enter event method that is called when the parse tree walker visits a fuzzyComparison context.
      *
-     * @param ctx - The expression context visited by the parse tree walker.
+     * @param ctx - The fuzzyComparison context visited by the parse tree walker.
      */
     @Override
-    override fun enterExpression(ctx: FuzzyJavaParser.ExpressionContext) {
-        if (ctx.bop?.text?.trim() != FUZZY_COMPARISON) {
-            return
-        }
+    override fun enterFuzzyComparison(ctx: FuzzyJavaParser.FuzzyComparisonContext) {
+        val matchLength = ctx.stop.charPositionInLine + 1
+        //The start won't ever be zero because that would be an illegal match
         sourceModifications.add(lazy {SourceModification(
-                ctx.bop.line, ctx.bop.charPositionInLine, ctx.bop.line, ctx.bop.charPositionInLine + FUZZY_COMPARISON.length,
-                FUZZY_COMPARISON, configuration.fuzzyComparisonTargets.random()
+                ctx.IDENTIFIER().text, ctx.start.line, ctx.start.charPositionInLine,
+                ctx.start.line, matchLength, ctx.text, configuration.fuzzyComparisonTargets.random()
+        )})
+    }
+    /**
+     * Enter event method that is called when the parse tree walker visits a fuzzyLiteral context.
+     *
+     * @param ctx - The fuzzyLiteral context visited by the parse tree walker.
+     */
+    override fun enterFuzzyLiteral(ctx: FuzzyJavaParser.FuzzyLiteralContext) {
+        val matchLength = ctx.stop.charPositionInLine + ctx.IDENTIFIER().text.length
+        //The start won't ever be zero because that would be an illegal match
+        sourceModifications.add(lazy {SourceModification(
+                ctx.IDENTIFIER().text, ctx.start.line, ctx.start.charPositionInLine,
+                ctx.start.line, matchLength, ctx.text, configuration.fuzzyLiteralTargets!!.next(ctx.FUZZY_LITERAL().text.substring(1))
         )})
     }
     /**
@@ -136,22 +148,21 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterIdentifier(ctx: FuzzyJavaParser.IdentifierContext) {
-        val fuzzyIdentifier = (ctx.FUZZYIDENTIFIER() ?: return).symbol // The token that represents the fuzzy identifier
+        val fuzzyIdentifier = (ctx.FUZZY_IDENTIFIER() ?: return).symbol // The token that represents the fuzzy identifier
         val scopesCopy: Scopes = Stack()
         scopes.forEach { scopesCopy.add(it) }
         sourceModifications.add(lazy {
+            val identifier = ctx.FUZZY_IDENTIFIER().text
             val startLine = fuzzyIdentifier.line
             val endLine = fuzzyIdentifier.line
             val startColumn = fuzzyIdentifier.charPositionInLine
             val endColumn = startColumn + fuzzyIdentifier.text.length
             val content = fuzzyIdentifier.text
-            // firstOrNull allows for definitions of fuzzy variables with same fuzzy id to map to the same replacement id, while lastOrNull makes them different
-            // this is because firstOrNull traverses the stack backwards
-            // when you traverse the stack backwards you run into "parent" scopes first
-            val map = scopesCopy.lastOrNull { it.containsKey(content) } ?: throw IllegalStateException("Fuzzy Id used but not declared.")
+            //Using firstOrNull traverses the stack bottom up so shadowed fuzzy identifiers map to the same generated id
+            val map = scopesCopy.firstOrNull { it.containsKey(content) } ?: throw IllegalStateException("Fuzzy Id used but not declared.")
             val replacement = map[content]!!
             SourceModification(
-                    startLine, startColumn, endLine, endColumn, content, replacement
+                    identifier, startLine, startColumn, endLine, endColumn, content, replacement
             )
         })
         // Find all of the scopes that contain this fuzzy id
@@ -165,8 +176,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterInterfaceDeclaration(ctx: FuzzyJavaParser.InterfaceDeclarationContext) {
-        if (ctx.identifier().FUZZYIDENTIFIER() != null) {
-            val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
+        if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
+            val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
         scopes.add(java.util.HashMap())
@@ -189,8 +200,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterMethodDeclaration(ctx: FuzzyJavaParser.MethodDeclarationContext) {
-        if (ctx.identifier().FUZZYIDENTIFIER() != null) {
-            val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
+        if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
+            val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
         scopes.add(java.util.HashMap())
@@ -213,8 +224,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      */
     @Override
     override fun enterVariableDeclaratorId(ctx: FuzzyJavaParser.VariableDeclaratorIdContext) {
-        if (ctx.identifier().FUZZYIDENTIFIER() != null) {
-            val name = ctx.identifier().FUZZYIDENTIFIER().symbol.text
+        if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
+            val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
     }
