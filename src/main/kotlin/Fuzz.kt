@@ -103,7 +103,8 @@ $block
         assert(it.startLine > 1 && it.endLine > 1)
         it.copy(startLine = it.startLine - 1, endLine = it.endLine - 1)
     }.toSet()
-    val modifiedSource = sourceModifications.apply(block)
+    var modifiedSource = sourceModifications.apply(block)
+    modifiedSource = document(modifiedSource, sourceModifications)
 
     parseJava("""{
 $modifiedSource
@@ -137,7 +138,9 @@ fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = Fuz
     assert(fuzzConfiguration.fuzzyLiteralTargets != null)
     walker.walk(fuzzer, fuzzyJavaParseTree) // Pass to fuzz source
 
-    val modifiedSource = fuzzer.sourceModifications.map { it.value }.toSet().apply(unit)
+    val sourceModifications = fuzzer.sourceModifications.map { it.value }.toSet()
+    var modifiedSource = sourceModifications.apply(unit)
+    modifiedSource = document(modifiedSource, sourceModifications)
 
     parseJava("""{
 $modifiedSource
@@ -145,6 +148,10 @@ $modifiedSource
 
     //println(getDocumentationOfProblem() + "\n\n")
     return modifiedSource
+}
+private fun document(source : String, sourceModifications : Set<SourceModification>): String {
+    val documenter = Documenter(source, sourceModifications)
+    return documenter.generate()
 }
 //Todo: Better docs for code below
 /**

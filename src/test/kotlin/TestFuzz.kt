@@ -174,31 +174,22 @@ public class Main {
         fuzzedSource shouldNotBe source
         //println(fuzzedSource)
     }
-    "should extract tokens from source doc" {
-        val doc = Documenter("/**If the temp is ?fds ?hi ?guess fajkldfn*/")
-        doc.getFuzzyTokens()
-        println(doc.getFuzzyTokens())
-    }
-    "should assign different ids to fuzzy ids" {
-        val source = """
-class Test {
-    void ?foo() {
-        int ?x = 10;
-        return ?x;
-    }
-    void ?func() {
-        int ?x = 10;
-        return ?x;
-    }
-}
+    "should implement fuzzy literals" {
+        val source = """ 
+int x = ?int=num0;
+double y = ?double=num1;
 """.trim()
         val fuzzedSource = fuzzBlock(source)
-        //println(fuzzedSource)
+        fuzzedSource shouldContain "int x = [0-9]+;".toRegex()
+        fuzzedSource shouldContain "double y = [0-9]+\\.[0-9]+;".toRegex()
     }
-    "f:should implement fuzzy literals" {
+    "should generate documentation" {
         val source = """
 int ?i = 0;
 double ?j = 0.0;
+/*Change the comparison operators so that ?i is no longer ?=comp0? ?int=num0
+ *and "Goodbye" prints the console.
+ */
 if (?i ?=comp0? ?int=num0) {
     System.out.println("Hello");
 } else if (?j ?=comp1? ?double=num1) {
@@ -207,6 +198,5 @@ if (?i ?=comp0? ?int=num0) {
 """.trim()
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource shouldNotBe source
-        println(fuzzedSource)
     }
 })
