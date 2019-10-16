@@ -1,8 +1,7 @@
 package edu.illinois.cs.cs125.fuzzyjava
 
-import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
-import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParserBaseListener
-import java.lang.IllegalStateException
+import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaParserBaseListener
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -24,7 +23,7 @@ const val FUZZY_COMPARISON = "?="
 
 //Todo: Better class descriptions
 /**
- * A class that listens for and bookmarks fuzzy tokensas well as what they map to.
+ * A class that listens for and bookmarks fuzzy tokens as well as what they map to.
  */
 class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBaseListener() {
     //enter and exit methods are in alphabetical order

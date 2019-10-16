@@ -1,13 +1,12 @@
 package edu.illinois.cs.cs125.fuzzyjava
 
 
-import FuzzyJavaLexer
-import FuzzyJavaParser
-import JavaLexer
-import JavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaLexer
+import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.JavaLexer
+import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.JavaParser
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-import java.lang.Exception
 
 //Todo: Finish documenting this class
 /**
