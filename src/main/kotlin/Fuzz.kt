@@ -1,6 +1,10 @@
 package edu.illinois.cs.cs125.fuzzyjava
 
-import edu.illinois.cs.cs125.fuzzyjava.antlr.*
+
+import FuzzyJavaLexer
+import FuzzyJavaParser
+import JavaLexer
+import JavaParser
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.lang.Exception
@@ -165,7 +169,7 @@ internal fun parseFuzzyJava(source: String): FuzzyJavaParser {
     val fuzzyJavaLexer = FuzzyJavaLexer(charStream)
     val tokenStream = CommonTokenStream(fuzzyJavaLexer)
     return FuzzyJavaParser(tokenStream)
-}
+}  
 /**
  * A class that holds information about what went wrong while parsing Java code.
  */
