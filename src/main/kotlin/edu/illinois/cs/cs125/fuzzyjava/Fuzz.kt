@@ -1,10 +1,10 @@
-package edu.illinois.cs.cs125.fuzzyjava
+package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 
-import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaLexer
-import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaParser
-import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.JavaLexer
-import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.JavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaLexer
+import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
+import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaParser
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 

@@ -1,7 +1,7 @@
-package edu.illinois.cs.cs125.fuzzyjava
+package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
-import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaParser
-import edu.illinois.cs.cs125.fuzzyjava.antlr.gen.FuzzyJavaParserBaseListener
+import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParserBaseListener
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -122,10 +122,12 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     override fun enterFuzzyComparison(ctx: FuzzyJavaParser.FuzzyComparisonContext) {
         val matchLength = ctx.stop.charPositionInLine + 1
         //The start won't ever be zero because that would be an illegal match
-        sourceModifications.add(lazy {SourceModification(
-                ctx.IDENTIFIER().text, ctx.start.line, ctx.start.charPositionInLine,
-                ctx.start.line, matchLength, ctx.text, configuration.fuzzyComparisonTargets.random()
-        )})
+        sourceModifications.add(lazy {
+            SourceModification(
+                    ctx.IDENTIFIER().text, ctx.start.line, ctx.start.charPositionInLine,
+                    ctx.start.line, matchLength, ctx.text, configuration.fuzzyComparisonTargets.random()
+            )
+        })
     }
     /**
      * Enter event method that is called when the parse tree walker visits a fuzzyLiteral context.
@@ -135,10 +137,12 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     override fun enterFuzzyLiteral(ctx: FuzzyJavaParser.FuzzyLiteralContext) {
         val matchLength = ctx.stop.charPositionInLine + ctx.IDENTIFIER().text.length
         //The start won't ever be zero because that would be an illegal match
-        sourceModifications.add(lazy {SourceModification(
-                ctx.IDENTIFIER().text, ctx.start.line, ctx.start.charPositionInLine,
-                ctx.start.line, matchLength, ctx.text, configuration.fuzzyLiteralTargets!!.next(ctx.FUZZY_LITERAL().text.substring(1))
-        )})
+        sourceModifications.add(lazy {
+            SourceModification(
+                    ctx.IDENTIFIER().text, ctx.start.line, ctx.start.charPositionInLine,
+                    ctx.start.line, matchLength, ctx.text, configuration.fuzzyLiteralTargets!!.next(ctx.FUZZY_LITERAL().text.substring(1))
+            )
+        })
     }
     /**
      * Enter event method that is called when the parse tree walker visits an identifier context.
