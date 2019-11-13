@@ -68,3 +68,21 @@ else {
 }
 
 ```
+
+## For Loop
+
+Convert to while/do-while loop
+Convert to for-each loop if possible (?)
+
+## For-Each Loop
+
+Convert to for loop
+Convert to while/do-while loop
+
+## While Loop
+
+Convert to do-while loop
+
+## Do-While Loop
+
+Convert to while loop
