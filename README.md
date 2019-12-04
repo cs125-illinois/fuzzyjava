@@ -29,7 +29,7 @@ else {
 
 ### If-Elif-Else Statement
 
-If an if-else statement has one or more else if statement, things get a little fuzzier...
+If an if-else statement has one or more else if statement, there are multiple ways to fuzz it.
 
 Original
 ```
@@ -76,7 +76,7 @@ Convert to for-each loop if possible (?)
 
 ## For-Each Loop
 
-Convert to for loop
+Convert to for loop (look at how Java does for-each loops internally)
 Convert to while/do-while loop
 
 ## While Loop
