@@ -45,7 +45,7 @@ else {
 ```
 Fuzzed
 ```
-if (condition1) {
+if (!condition && condition1) {
   [Code Block 2]
 }
 else if (condition) {
