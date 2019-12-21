@@ -22,11 +22,13 @@ data class SourceModification(
         val replace: String
 )
 /**
- * A class that holds information about what to map fuzzy tokens to.
+ * A class that holds information about how the user would like to fuzz the code
  */
 data class FuzzConfiguration(
+        // These should not need to be changed from the default
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
-        // Default is null because we do not know if the user will provide targets, and if not,
+
+        // Default is null for these because we do not know if the user will provide targets, and if not,
         // we need to collect all of the non-fuzzy variables before creating and IdSupplier instance
         var fuzzyIdentifierTargets: IdSupplier? = null,
         var fuzzyLiteralTargets: LiteralSupplier? = null
@@ -160,8 +162,8 @@ private fun document(source : String, sourceModifications : Set<SourceModificati
 /**
  * Used to check if code adheres to the template language syntax.
  *
- * @param source - The original source inputted by the user.
- * @return Returns a parser.
+ * @param source - the original source inputted by the user.
+ * @return a parser
  */
 internal fun parseFuzzyJava(source: String): FuzzyJavaParser {
     val charStream = CharStreams.fromString(source)
