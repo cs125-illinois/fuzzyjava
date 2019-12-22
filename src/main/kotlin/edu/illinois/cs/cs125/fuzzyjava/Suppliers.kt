@@ -6,12 +6,18 @@ import kotlin.math.roundToInt
 /**
  * A class that lazily generates an infinite sequence of ids.
  *
+ * @param definedIdentifiers the identifiers in the code
+ * @param fuzzyIdentifiers an optional set of ids the user would like to replace the ids in the code
+ *        with randomly - defaults to empty (NOTE: if definedIdentifiers.size > fuzzyIdentifiers.size,
+ *        then a lazily generated infinite sequence of ids labeled cs125Id# will be used for the
+ *        remaining ids)
+ *
  * Used by [FuzzConfiguration.fuzzyIdentifierTargets].
  */
-class IdSupplier(private val definedIdentifiers: Set<Pair<String, String>>) {
+class IdSupplier(private val definedIdentifiers: Set<Pair<String, String>>, private val fuzzyIdentifiers: MutableList<String> = mutableListOf()) {
     /**The infinite sequence of identifiers to choose from.*/
-    private var sequenceOfIds = Sequence { object : Iterator<String> {
-        val identifierPrefix = "cs125Id_" // Todo: Will probably end up changing this
+    private var sequenceOfCS125Ids = Sequence { object : Iterator<String> {
+        val identifierPrefix = "cs125Id_"
         var next = 0 // start at -1 so first number used is 0
         override fun hasNext(): Boolean {return true}
         override fun next(): String {
@@ -29,9 +35,17 @@ class IdSupplier(private val definedIdentifiers: Set<Pair<String, String>>) {
      */
     val nextId: String
         get() {
-            val newId = sequenceOfIds.first()
-            sequenceOfIds = sequenceOfIds.drop(1)
-            return newId
+            if (!fuzzyIdentifiers.isEmpty()) {
+                // If we have fuzzy identifiers left, find a random identifier to replace and then
+                // remove it from the list so as not to have doubles
+                return fuzzyIdentifiers.removeAt((Math.random() * fuzzyIdentifiers.size).toInt())
+            }
+            else {
+                // If we run out of fuzzy identifiers, use cs125# to fuzz the remaining ids
+                val newId = sequenceOfCS125Ids.first()
+                sequenceOfCS125Ids = sequenceOfCS125Ids.drop(1)
+                return newId
+            }
         }
 
 }
