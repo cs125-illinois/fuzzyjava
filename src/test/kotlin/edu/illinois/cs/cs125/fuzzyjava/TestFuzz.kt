@@ -18,6 +18,8 @@ class TestFuzz : StringSpec({
 
     val unit = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit.txt").readText().trim()
     val unit1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit1.txt").readText().trim()
+    val unit2 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit2.txt").readText().trim()
+    //val unit3 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit3.txt").readText().trim()
 
     "should not modify blocks without fuzz" {
         val source = block
@@ -61,38 +63,7 @@ class TestFuzz : StringSpec({
         //println(fuzzedSource)
     }// Todo: figure out a better way to test these inputs
     "should implement fuzzy method identifiers on compilation units" {
-        val source = """
-//non-fuzzy ids = {0, 1, 3, 4, 6}
-public class Main {
-    static boolean ?foo(int a, int b) {
-        return a ?=comp0? b;
-    }
-    private static void cs125Id_6(boolean ?bool) { 
-        if (?bool) {
-            System.out.println("cs125 rocks!");
-        }
-    }
-    private void cs125Id_1(int ?some_int, boolean ?bool) {
-        System.out.println(?bool && ?some_int ?=comp1? 1);
-    }
-    public static int cs125Id_4() {
-        int ?int0 = 100;
-        return ?int0;
-    }
-    private static void ?another_method(float ?data) {
-        return ?method(?data, 3.0);
-    }
-    private static void ?method(float ?data, float ?more_data) {
-        return ?data ?=comp2? ?more_data;
-    }
-    public static void main() {
-        int cs125Id_0 = 0;
-        int cs125Id_3 = 10;
-        boolean ?identifier = ?foo(cs125Id_0, cs125Id_3) || ?another_method((float) cs125Id_3) ?=comp3? ?another_method((float) cs125Id_0);
-        System.out.println("The result was: " + ?identifier);
-    }
-}
-""".trim()
+        val source = unit2
         val fuzzedSource = fuzzCompilationUnit(source)
         fuzzedSource shouldNotBe source
         //println(fuzzedSource)
