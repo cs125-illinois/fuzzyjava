@@ -10,8 +10,11 @@ import io.kotlintest.shouldBe
 import io.kotlintest.shouldNotBe
 import io.kotlintest.specs.StringSpec
 import org.antlr.v4.runtime.CharStreams
+import java.io.File
 
 class TestFuzz : StringSpec({
+    val block1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block1.txt").readText().trim()
+
     "should not modify blocks without fuzz" {
         val source = """
 int i = 0;
@@ -21,16 +24,11 @@ int j = 1;
         fuzzedSource shouldBe source
     }
     "should implement fuzzy comparisons on blocks" {
-        val source = """
-int i = 0;
-int j = 1;
-boolean k = (i ?=comp0? j && i ?=comp1? j);
-""".trim()
+        val source = block1
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource.lines()[2] shouldStartWith ("boolean k = (i")
         fuzzedSource.lines()[2] shouldContain "j && i"
         fuzzedSource.lines()[2] shouldEndWith ("j);")
-        //println(fuzzedSource)
     }
     "should implement fuzzy comparisons on compilation units" {
         val source = """
