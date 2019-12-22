@@ -36,17 +36,17 @@ compilationUnit
     ;
 
 packageDeclaration
-    : annotation* PACKAGE qualifiedName ';'
+    : annotation* PACKAGE qualifiedName semicolon
     ;
 
 importDeclaration
-    : IMPORT STATIC? qualifiedName ('.' '*')? ';'
+    : IMPORT STATIC? qualifiedName ('.' '*')? semicolon
     ;
 
 typeDeclaration
     : classOrInterfaceModifier*
       (classDeclaration | enumDeclaration | interfaceDeclaration | annotationTypeDeclaration)
-    | ';'
+    | semicolon
     ;
 
 modifier
@@ -105,7 +105,7 @@ enumConstant
     ;
 
 enumBodyDeclarations
-    : ';' classBodyDeclaration*
+    : semicolon classBodyDeclaration*
     ;
 
 interfaceDeclaration
@@ -121,7 +121,7 @@ interfaceBody
     ;
 
 classBodyDeclaration
-    : ';'
+    : semicolon
     | STATIC? block
     | modifier* memberDeclaration
     ;
@@ -151,7 +151,7 @@ methodDeclaration
 
 methodBody
     : block
-    | ';'
+    | semicolon
     ;
 
 typeTypeOrVoid
@@ -172,12 +172,12 @@ constructorDeclaration
     ;
 
 fieldDeclaration
-    : typeType variableDeclarators ';'
+    : typeType variableDeclarators semicolon
     ;
 
 interfaceBodyDeclaration
     : modifier* interfaceMemberDeclaration
-    | ';'
+    | semicolon
     ;
 
 interfaceMemberDeclaration
@@ -191,7 +191,7 @@ interfaceMemberDeclaration
     ;
 
 constDeclaration
-    : typeType constantDeclarator (',' constantDeclarator)* ';'
+    : typeType constantDeclarator (',' constantDeclarator)* semicolon
     ;
 
 constantDeclarator
@@ -334,15 +334,15 @@ annotationTypeBody
 
 annotationTypeElementDeclaration
     : modifier* annotationTypeElementRest
-    | ';' // this is not allowed by the grammar, but apparently allowed by the actual compiler
+    | semicolon // this is not allowed by the grammar, but apparently allowed by the actual compiler
     ;
 
 annotationTypeElementRest
-    : typeType annotationMethodOrConstantRest ';'
-    | classDeclaration ';'?
-    | interfaceDeclaration ';'?
-    | enumDeclaration ';'?
-    | annotationTypeDeclaration ';'?
+    : typeType annotationMethodOrConstantRest semicolon
+    | classDeclaration semicolon?
+    | interfaceDeclaration semicolon?
+    | enumDeclaration semicolon?
+    | annotationTypeDeclaration semicolon?
     ;
 
 annotationMethodOrConstantRest
@@ -369,7 +369,7 @@ block
     ;
 
 blockStatement
-    : localVariableDeclaration ';'
+    : localVariableDeclaration semicolon
     | statement
     | localTypeDeclaration
     ;
@@ -381,26 +381,26 @@ localVariableDeclaration
 localTypeDeclaration
     : classOrInterfaceModifier*
       (classDeclaration | interfaceDeclaration)
-    | ';'
+    | semicolon
     ;
 
 statement
     : blockLabel=block
-    | ASSERT expression (':' expression)? ';'
+    | ASSERT expression (':' expression)? semicolon
     | IF parExpression statement (ELSE statement)?
     | FOR '(' forControl ')' statement
     | WHILE parExpression statement
-    | DO statement WHILE parExpression ';'
+    | DO statement WHILE parExpression semicolon
     | TRY block (catchClause+ finallyBlock? | finallyBlock)
     | TRY resourceSpecification block catchClause* finallyBlock?
     | SWITCH parExpression '{' switchBlockStatementGroup* switchLabel* '}'
     | SYNCHRONIZED parExpression block
-    | RETURN expression? ';'
-    | THROW expression ';'
-    | BREAK IDENTIFIER? ';'
-    | CONTINUE IDENTIFIER? ';'
-    | SEMI
-    | statementExpression=expression ';'
+    | RETURN expression? semicolon
+    | THROW expression semicolon
+    | BREAK IDENTIFIER? semicolon
+    | CONTINUE IDENTIFIER? semicolon
+    | semicolon
+    | statementExpression=expression semicolon
     | identifierLabel=IDENTIFIER ':' statement
     ;
 
@@ -417,11 +417,11 @@ finallyBlock
     ;
 
 resourceSpecification
-    : '(' resources ';'? ')'
+    : '(' resources semicolon? ')'
     ;
 
 resources
-    : resource (';' resource)*
+    : resource (semicolon resource)*
     ;
 
 resource
@@ -442,7 +442,7 @@ switchLabel
 
 forControl
     : enhancedForControl
-    | forInit? ';' expression? ';' forUpdate=expressionList?
+    | forInit? semicolon expression? semicolon forUpdate=expressionList?
     ;
 
 forInit
