@@ -19,7 +19,7 @@ class TestFuzz : StringSpec({
     val unit = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit.txt").readText().trim()
     val unit1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit1.txt").readText().trim()
     val unit2 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit2.txt").readText().trim()
-    //val unit3 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit3.txt").readText().trim()
+    val unit3 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit3.txt").readText().trim()
 
     "should not modify blocks without fuzz" {
         val source = block
@@ -69,46 +69,7 @@ class TestFuzz : StringSpec({
         //println(fuzzedSource)
     }
     "should implement fuzzy class identifies on compilation units" {
-        val source = """
-public class Main {
-    public static void main() {
-        String ?name = "CS";
-        int ?age = 125;
-        ?class ?object = new ?class(?name, ?age);
-        System.out.println("Name: " + ?object.?getName());
-        System.out.println("Age: " + ?object.?getAge());
-        
-        ?object.?setName("CS");
-        ?object.?setAge(173);
-        System.out.println(?object);
-    }
-    class ?class {
-        private String ?field1;
-        private int ?field2;
-        ?class(final String ?field1, final int ?field2) {
-            this.?field1 = ?field1;
-            this.?field2 = ?field2;
-        }
-        String ?getName() {
-            return ?field1;
-        }
-        int ?getAge() {
-            return ?field2;
-        }
-        void ?setName(final String ?newName) {
-            ?field1 = ?newName;
-        }
-        void ?setAge(final int ?newAge) {
-            ?field2 = ?newAge;
-        }
-        
-        @Override
-        public String toString() {
-            return "Name: " + ?field1 + "\nAge: " + ?field2;
-        }
-    }
-}
-""".trim()
+        val source = unit3
         val fuzzedSource = fuzzCompilationUnit(source)
         fuzzedSource shouldNotBe source
         //println(fuzzedSource)
