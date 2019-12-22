@@ -1,6 +1,7 @@
 package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 
+import edu.illinois.cs.cs125.fuzzyjava.Transformation
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaLexer
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
 import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
@@ -10,7 +11,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 //Todo: Finish documenting this class
 /**
- * A class that holds information about the modifications made while walking the parse tree.
+ * Holds information about the modifications made while walking the parse tree.
  */
 data class SourceModification(
         var identifier: String,
@@ -22,7 +23,7 @@ data class SourceModification(
         val replace: String
 )
 /**
- * A class that holds information about how the user would like to fuzz the code
+ * Holds information about how the user would like to fuzz the code.
  */
 data class FuzzConfiguration(
         // These should not need to be changed from the default
@@ -31,10 +32,13 @@ data class FuzzConfiguration(
         // Default is null for these because we do not know if the user will provide targets, and if not,
         // we need to collect all of the non-fuzzy variables before creating and IdSupplier instance
         var fuzzyIdentifierTargets: IdSupplier? = null,
-        var fuzzyLiteralTargets: LiteralSupplier? = null
+        var fuzzyLiteralTargets: LiteralSupplier? = null,
+
+        // This is a list of optional transformations that the user may supply - defaults to empty for no transformations
+        var fuzzyTransformations: List<Transformation>? = listOf()
 )
 /**
- * Method used to apply the modifications
+ * Method used to apply the source modifications
  *
  * @param source - The source code that will be modified.
  * @return Returns the modified source code.
