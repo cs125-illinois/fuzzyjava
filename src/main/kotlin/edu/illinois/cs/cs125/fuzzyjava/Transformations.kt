@@ -5,7 +5,7 @@ package edu.illinois.cs.cs125.fuzzyjava
  */
 interface Transformation {
     val name: String // The type of transformation
-    val arguments: Set<String> // A list of arguments for the transformation (size varies based on transformation type)
+    val arguments: MutableSet<String> // A list of arguments for the transformation (size varies based on transformation type)
     val isSemanticsPreserving: Boolean // Whether the transformation preserves semantics (i.e. the code functions the same)
 }
 
@@ -21,11 +21,11 @@ interface Transformation {
  */
 class InvertIfElse(private val includeElif : Boolean) : Transformation {
     override val name: String = "invert-if-else"
-    override val arguments = setOf<String>()
+    override val arguments = mutableSetOf<String>()
     override val isSemanticsPreserving = true
     init {
         if (includeElif) {
-            arguments.plus("include-elif")
+            arguments.add("include-elif")
         }
     }
 }
@@ -39,14 +39,14 @@ class InvertIfElse(private val includeElif : Boolean) : Transformation {
  */
 class RemoveSemicolons(private val rand: Boolean) : Transformation {
     override val name: String = "remove-semicolons"
-    override val arguments = setOf<String>()
-    override val isSemanticsPreserving = false // TODO: Change this to true if Fuzzy Java is ported to Fuzzy Kotlin
+    override val arguments = mutableSetOf<String>()
+    override val isSemanticsPreserving = false // Change this to true if Fuzzy Java is ported to Fuzzy Kotlin
     init {
         if (rand == true) {
-            arguments.plus("random")
+            arguments.add("random")
         }
         else {
-            arguments.plus("all")
+            arguments.add("all")
         }
     }
 }
