@@ -64,8 +64,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
             val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
         }
-        //We do not push a new "scope" onto the stack because the methods within a class need to be visible to outer scopes
-        //If they try to use a private fuzzed method or a fuzzed method from a private class then we delegate that error to the compiler
+        // We do not push a new "scope" onto the stack because the methods within a class need to be visible to outer scopes
+        // If they try to use a private fuzzed method or a fuzzed method from a private class then we delegate that error to the compiler
     }
     /**
      * Enter event method that is called when the parse tree walker visits a compilationUnit context.
@@ -230,6 +230,27 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
         if (ctx.identifier().FUZZY_IDENTIFIER() != null) {
             val name = ctx.identifier().FUZZY_IDENTIFIER().symbol.text
             scopes.peek()[name] = configuration.fuzzyIdentifierTargets!!.nextId
+        }
+    }
+
+    /**
+     * Enter a parse tree produced by [FuzzyJavaParser.semicolon].
+     * @param ctx the parse tree
+     */
+    @Override
+    override fun enterSemicolon(ctx: FuzzyJavaParser.SemicolonContext) {
+        val removeSemicolonsTransformation = configuration.fuzzyTransformations?.find { it.name == "remove-semicolons" }
+        if (removeSemicolonsTransformation != null) {
+            // Check that semicolon transformation is requested by the user
+            if (removeSemicolonsTransformation.arguments.contains("all") || Math.random() > 0.5) {
+                // If all semicolons are to be removed OR if semicolons are removed randomly and
+                // random chance lands on true, remove semicolon
+                sourceModifications.add(lazy {
+                    SourceModification(
+                            ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                            ctx.start.line, ctx.start.charPositionInLine, ctx.text, " ")
+                })
+            }
         }
     }
 }
