@@ -35,13 +35,13 @@ data class FuzzConfiguration(
         var fuzzyLiteralTargets: LiteralSupplier? = null,
 
         // This is a list of optional transformations that the user may supply - defaults to empty for no transformations
-        var fuzzyTransformations: List<Transformation>? = listOf()
+        var fuzzyTransformations: MutableList<Transformation>? = mutableListOf()
 )
 /**
- * Method used to apply the source modifications
+ * Applies source modifications to the source code
  *
- * @param source - The source code that will be modified.
- * @return Returns the modified source code.
+ * @param source the source code that will be modified.
+ * @return the modified source code.
  */
 fun Set<SourceModification>.apply(source: String): String {
     val modifiedSource = source.lines().toMutableList()
@@ -125,9 +125,9 @@ $modifiedSource
 /**
  * Fuzzes a "unit" of template code.
  *
- * @param unit - The block of source code to be fuzzed.
- * @param fuzzConfiguration - The config that will be used to modify the unit.
- * @return Returns a unit of Java code.
+ * @param unit - the block of source code to be fuzzed
+ * @param fuzzConfiguration - the config that will be used to modify the unit
+ * @return a unit of Java code
  */
 //passed the source code to default of fuzz config so IdSupplier can get all of the non-fuzzy identifiers
 fun fuzzCompilationUnit(unit: String, fuzzConfiguration: FuzzConfiguration = FuzzConfiguration()): String {
@@ -158,6 +158,7 @@ $modifiedSource
     //println(getDocumentationOfProblem() + "\n\n")
     return modifiedSource
 }
+
 private fun document(source : String, sourceModifications : Set<SourceModification>): String {
     val documenter = Documenter(source, sourceModifications)
     return documenter.generate()
