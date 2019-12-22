@@ -23,6 +23,8 @@ class TestFuzz : StringSpec({
     val unit2 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit2.txt").readText().trim()
     val unit3 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit3.txt").readText().trim()
 
+    // Core Fuzzing - Comparisons, Identifiers, Literals
+
     "should not modify blocks without fuzz" {
         val source = block
         val fuzzedSource = fuzzBlock(source)
@@ -68,33 +70,36 @@ class TestFuzz : StringSpec({
         val source = unit2
         val fuzzedSource = fuzzCompilationUnit(source)
         fuzzedSource shouldNotBe source
-        //println(fuzzedSource)
     }
+
     "should implement fuzzy class identifies on compilation units" {
         val source = unit3
         val fuzzedSource = fuzzCompilationUnit(source)
         fuzzedSource shouldNotBe source
-        //println(fuzzedSource)
     }
+
     "should implement fuzzy literals" {
         val source = block2
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource shouldContain "int x = [0-9]+;".toRegex()
         fuzzedSource shouldContain "double y = [0-9]+\\.[0-9]+;".toRegex()
     }
+
+    // Documentation
+
     "should generate documentation" {
         val source = block3
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource shouldNotBe source
     }
 
+    // AST Transformations
 
     "should remove semicolons if [remove-semicolons all] transformation is applied" {
         val source = unit1
         val fuzzConfiguration = FuzzConfiguration()
         fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
         val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
-
         fuzzedSource shouldNotContain(";")
     }
 })

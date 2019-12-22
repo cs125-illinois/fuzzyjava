@@ -241,6 +241,7 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     override fun enterSemicolon(ctx: FuzzyJavaParser.SemicolonContext) {
         val removeSemicolonsTransformation = configuration.fuzzyTransformations?.find { it.name == "remove-semicolons" }
         if (removeSemicolonsTransformation != null) {
+            val matchLength = ctx.stop.charPositionInLine + 1
             // Check that semicolon transformation is requested by the user
             if (removeSemicolonsTransformation.arguments.contains("all") || Math.random() > 0.5) {
                 // If all semicolons are to be removed OR if semicolons are removed randomly and
@@ -248,7 +249,7 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                 sourceModifications.add(lazy {
                     SourceModification(
                             ctx.text, ctx.start.line, ctx.start.charPositionInLine,
-                            ctx.start.line, ctx.start.charPositionInLine, ctx.text, " ")
+                            ctx.start.line, matchLength, ";", " ")
                 })
             }
         }
