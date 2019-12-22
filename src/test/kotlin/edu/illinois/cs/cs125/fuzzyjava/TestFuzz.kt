@@ -245,8 +245,9 @@ public class Main {
 }
 """.trim()
         val fuzzConfiguration = FuzzConfiguration()
-        fuzzConfiguration.fuzzyTransformations?.plus(RemoveSemicolons(false))
-        val fuzzedSource = fuzzCompilationUnit(source, fuzzConfiguration)
+        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
+        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+
         fuzzedSource shouldNotContain(";")
     }
 })
