@@ -16,6 +16,8 @@ class TestFuzz : StringSpec({
     val block = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block.txt").readText().trim()
     val block1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block1.txt").readText().trim()
 
+    val unit = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit.txt").readText().trim()
+
     "should not modify blocks without fuzz" {
         val source = block
         val fuzzedSource = fuzzBlock(source)
@@ -29,15 +31,7 @@ class TestFuzz : StringSpec({
         fuzzedSource.lines()[2] shouldEndWith ("j);")
     }
     "should implement fuzzy comparisons on compilation units" {
-        val source = """
-public class Main {
-    public static void main() {
-        int i = 0;
-        int j = 1;
-        boolean k = (i ?=comp0? j && i ?=comp1? j);
-    }
-}
-""".trim()
+        val source = unit
         val fuzzedSource = fuzzCompilationUnit(source)
         fuzzedSource.lines()[4].trim() shouldStartWith ("boolean k = (i")
         fuzzedSource.lines()[4] shouldContain "j && i"
