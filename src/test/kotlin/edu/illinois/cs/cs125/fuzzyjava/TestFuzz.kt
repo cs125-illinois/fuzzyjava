@@ -16,6 +16,7 @@ class TestFuzz : StringSpec({
     val block = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block.txt").readText().trim()
     val block1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block1.txt").readText().trim()
     val block2 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block2.txt").readText().trim()
+    val block3 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block3.txt").readText().trim()
 
     val unit = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit.txt").readText().trim()
     val unit1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit1.txt").readText().trim()
@@ -82,18 +83,7 @@ class TestFuzz : StringSpec({
         fuzzedSource shouldContain "double y = [0-9]+\\.[0-9]+;".toRegex()
     }
     "should generate documentation" {
-        val source = """
-int ?i = 0;
-double ?j = 0.0;
-/*Change the comparison operators so that ?i is no longer ?=comp0? ?int=num0
- *and "Goodbye" prints the console.
- */
-if (?i ?=comp0? ?int=num0) {
-    System.out.println("Hello");
-} else if (?j ?=comp1? ?double=num1) {
-    System.out.println("Goodbye");
-}
-""".trim()
+        val source = block3
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource shouldNotBe source
     }

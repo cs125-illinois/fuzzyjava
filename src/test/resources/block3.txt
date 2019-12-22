@@ -1,0 +1,10 @@
+int ?i = 0;
+double ?j = 0.0;
+/*Change the comparison operators so that ?i is no longer ?=comp0? ?int=num0
+ *and "Goodbye" prints the console.
+ */
+if (?i ?=comp0? ?int=num0) {
+    System.out.println("Hello");
+} else if (?j ?=comp1? ?double=num1) {
+    System.out.println("Goodbye");
+}
