@@ -15,6 +15,7 @@ import java.io.File
 class TestFuzz : StringSpec({
     val block = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block.txt").readText().trim()
     val block1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block1.txt").readText().trim()
+    val block2 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block2.txt").readText().trim()
 
     val unit = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit.txt").readText().trim()
     val unit1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit1.txt").readText().trim()
@@ -75,10 +76,7 @@ class TestFuzz : StringSpec({
         //println(fuzzedSource)
     }
     "should implement fuzzy literals" {
-        val source = """ 
-int x = ?int=num0;
-double y = ?double=num1;
-""".trim()
+        val source = block2
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource shouldContain "int x = [0-9]+;".toRegex()
         fuzzedSource shouldContain "double y = [0-9]+\\.[0-9]+;".toRegex()

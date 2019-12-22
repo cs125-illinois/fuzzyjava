@@ -1,0 +1,2 @@
+int x = ?int=num0;
+double y = ?double=num1;
