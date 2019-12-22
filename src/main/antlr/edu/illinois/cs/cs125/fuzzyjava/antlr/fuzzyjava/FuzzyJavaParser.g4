@@ -629,3 +629,7 @@ identifier
     : IDENTIFIER
     | FUZZY_IDENTIFIER
     ;
+
+semicolon
+    : SEMI
+    ;

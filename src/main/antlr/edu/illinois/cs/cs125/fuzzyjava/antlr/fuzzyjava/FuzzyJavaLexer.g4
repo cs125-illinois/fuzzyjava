@@ -29,10 +29,15 @@
 
 lexer grammar FuzzyJavaLexer;
 
-// Fuzzy keywords
+// Fuzzy Keywords
+
 FUZZY_LITERAL:       QUESTION (BOOLEAN| BYTE | CHAR | DOUBLE | FLOAT | INT | LONG | SHORT);
 FUZZY_COMPARISON:    QUESTION ASSIGN;
 FUZZY_IDENTIFIER:    QUESTION IDENTIFIER;
+
+// AST Transformations
+
+//SEMICOLON:    SEMI;
 
 // Keywords
 
