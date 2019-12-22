@@ -1,13 +1,13 @@
-package edu.illinois.cs.cs125.fuzzyjava
+package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
-import io.kotlintest.specs.StringSpec
-import io.kotlintest.*
 import io.kotlintest.matchers.string.shouldContain
 import io.kotlintest.matchers.string.shouldEndWith
 import io.kotlintest.matchers.string.shouldStartWith
+import io.kotlintest.shouldBe
+import io.kotlintest.shouldNotBe
+import io.kotlintest.specs.StringSpec
 import org.antlr.v4.runtime.CharStreams
-import kotlin.collections.HashMap
 
 class TestFuzz : StringSpec({
     "should not modify blocks without fuzz" {

@@ -1,4 +1,4 @@
-package edu.illinois.cs.cs125.fuzzyjava
+package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 private const val EQUAL_TO = "equal to"
 private const val GREATER_THAN = "greater than"

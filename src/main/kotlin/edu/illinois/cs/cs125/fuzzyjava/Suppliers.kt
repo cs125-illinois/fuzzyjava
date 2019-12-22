@@ -1,4 +1,4 @@
-package edu.illinois.cs.cs125.fuzzyjava
+package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 import kotlin.math.roundToInt
 

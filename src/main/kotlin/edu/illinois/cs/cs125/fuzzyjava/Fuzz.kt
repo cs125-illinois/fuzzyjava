@@ -1,13 +1,17 @@
-package edu.illinois.cs.cs125.fuzzyjava
+package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
-import edu.illinois.cs.cs125.fuzzyjava.antlr.*
+
+import edu.illinois.cs.cs125.fuzzyjava.Transformation
+import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaLexer
+import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
+import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
+import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaParser
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-import java.lang.Exception
 
 //Todo: Finish documenting this class
 /**
- * A class that holds information about the modifications made while walking the parse tree.
+ * Holds information about the modifications made while walking the parse tree.
  */
 data class SourceModification(
         var identifier: String,
@@ -19,17 +23,22 @@ data class SourceModification(
         val replace: String
 )
 /**
- * A class that holds information about what to map fuzzy tokens to.
+ * Holds information about how the user would like to fuzz the code.
  */
 data class FuzzConfiguration(
+        // These should not need to be changed from the default
         val fuzzyComparisonTargets: List<String> = listOf("==", "!=", "<", "<=", ">", ">="),
-        // Default is null because we do not know if the user will provide targets, and if not,
+
+        // Default is null for these because we do not know if the user will provide targets, and if not,
         // we need to collect all of the non-fuzzy variables before creating and IdSupplier instance
         var fuzzyIdentifierTargets: IdSupplier? = null,
-        var fuzzyLiteralTargets: LiteralSupplier? = null
+        var fuzzyLiteralTargets: LiteralSupplier? = null,
+
+        // This is a list of optional transformations that the user may supply - defaults to empty for no transformations
+        var fuzzyTransformations: List<Transformation>? = listOf()
 )
 /**
- * Method used to apply the modifications
+ * Method used to apply the source modifications
  *
  * @param source - The source code that will be modified.
  * @return Returns the modified source code.
@@ -157,15 +166,15 @@ private fun document(source : String, sourceModifications : Set<SourceModificati
 /**
  * Used to check if code adheres to the template language syntax.
  *
- * @param source - The original source inputted by the user.
- * @return Returns a parser.
+ * @param source - the original source inputted by the user.
+ * @return a parser
  */
 internal fun parseFuzzyJava(source: String): FuzzyJavaParser {
     val charStream = CharStreams.fromString(source)
     val fuzzyJavaLexer = FuzzyJavaLexer(charStream)
     val tokenStream = CommonTokenStream(fuzzyJavaLexer)
     return FuzzyJavaParser(tokenStream)
-}
+}  
 /**
  * A class that holds information about what went wrong while parsing Java code.
  */

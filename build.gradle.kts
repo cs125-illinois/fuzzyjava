@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     val kotlinVersion = "1.3.41"
     kotlin("jvm") version kotlinVersion
@@ -14,6 +12,7 @@ repositories {
 }
 dependencies {
     antlr("org.antlr:antlr4:4.7.2")
+    compile("org.jetbrains.kotlin:kotlin-scripting-jvm")
 
     implementation(kotlin("stdlib"))
     implementation("org.slf4j:slf4j-api:1.7.26")
