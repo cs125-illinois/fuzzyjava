@@ -90,46 +90,7 @@ class TestFuzz : StringSpec({
 
 
     "should remove semicolons if [remove-semicolons all] transformation is applied" {
-        val source = """
-public class Main {
-    public static void main() {
-        String ?name = "CS";
-        int ?age = 125;
-        ?class ?object = new ?class(?name, ?age);
-        System.out.println("Name: " + ?object.?getName());
-        System.out.println("Age: " + ?object.?getAge());
-        
-        ?object.?setName("CS");
-        ?object.?setAge(173);
-        System.out.println(?object);
-    }
-    class ?class {
-        private String ?field1;
-        private int ?field2;
-        ?class(final String ?field1, final int ?field2) {
-            this.?field1 = ?field1;
-            this.?field2 = ?field2;
-        }
-        String ?getName() {
-            return ?field1;
-        }
-        int ?getAge() {
-            return ?field2;
-        }
-        void ?setName(final String ?newName) {
-            ?field1 = ?newName;
-        }
-        void ?setAge(final int ?newAge) {
-            ?field2 = ?newAge;
-        }
-        
-        @Override
-        public String toString() {
-            return "Name: " + ?field1 + "\nAge: " + ?field2;
-        }
-    }
-}
-""".trim()
+        val source = unit1
         val fuzzConfiguration = FuzzConfiguration()
         fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
         val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
