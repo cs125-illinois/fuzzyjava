@@ -17,6 +17,7 @@ class TestFuzz : StringSpec({
     val block1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block1.txt").readText().trim()
 
     val unit = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit.txt").readText().trim()
+    val unit1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit1.txt").readText().trim()
 
     "should not modify blocks without fuzz" {
         val source = block
@@ -38,32 +39,7 @@ class TestFuzz : StringSpec({
         fuzzedSource.lines()[4] shouldEndWith ("j);")
     }
     "should implement fuzzy variable identifiers on compilation units" {
-        val source = """
-public class Main {
-    public static void main() {
-        int cs125Id_0 = 0;
-        int cs125Id_3 = 10;
-        int ?identifier = 0;
-        {
-            float ?test = 1.0;
-            {
-                boolean ?guess;
-                ?guess = false;
-                if (false) {
-                    float ?test = 2.0;
-                    ?identifier = 10000;
-                }
-            }
-            boolean ?guess = (true && false || true && (?test ?=comp0? 2.0));
-            ?test += (float) ?identifier;
-        }
-        ?identifier *= ?identifier;
-        int ?some_number;
-        ?some_number = (int) (Math.random() * j);
-        boolean k = (i ?=comp1? j && i ?=comp2? j) ? true : false;
-    }
-}
-""".trim()
+        val source = unit1
         val fuzzedSource = fuzzCompilationUnit(source)
         val charStream = CharStreams.fromString(fuzzedSource)
         val javaLexer = JavaLexer(charStream)
