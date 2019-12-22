@@ -13,13 +13,11 @@ import org.antlr.v4.runtime.CharStreams
 import java.io.File
 
 class TestFuzz : StringSpec({
+    val block = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block.txt").readText().trim()
     val block1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/block1.txt").readText().trim()
 
     "should not modify blocks without fuzz" {
-        val source = """
-int i = 0;
-int j = 1;
-""".trim()
+        val source = block
         val fuzzedSource = fuzzBlock(source)
         fuzzedSource shouldBe source
     }
