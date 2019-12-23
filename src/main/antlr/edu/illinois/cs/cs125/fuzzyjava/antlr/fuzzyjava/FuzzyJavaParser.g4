@@ -388,6 +388,7 @@ statement
     : blockLabel=block
     | ASSERT expression (':' expression)? semicolon
     | IF parExpression statement (ELSE statement)?
+    | fuzzyIfElse
     | FOR '(' forControl ')' statement
     | WHILE parExpression statement
     | DO statement WHILE parExpression semicolon
@@ -632,4 +633,8 @@ identifier
 
 semicolon
     : SEMI
+    ;
+
+fuzzyIfElse
+    : QUESTION IF parExpression statement (ELSE statement)? QUESTION
     ;
