@@ -37,6 +37,7 @@ class TestFuzz : StringSpec({
         fuzzedSource.lines()[2] shouldContain "j && i"
         fuzzedSource.lines()[2] shouldEndWith ("j);")
     }
+
     "should implement fuzzy comparisons on compilation units" {
         val source = unit
         val fuzzedSource = fuzzCompilationUnit(source)
@@ -44,6 +45,7 @@ class TestFuzz : StringSpec({
         fuzzedSource.lines()[4] shouldContain "j && i"
         fuzzedSource.lines()[4] shouldEndWith ("j);")
     }
+
     "should implement fuzzy variable identifiers on compilation units" {
         val source = unit1
         val fuzzedSource = fuzzCompilationUnit(source)
@@ -66,6 +68,43 @@ class TestFuzz : StringSpec({
         variableFrequencies shouldBe mutableListOf(1, 1, 2, 3, 4, 5)
         //println(fuzzedSource)
     }// Todo: figure out a better way to test these inputs
+
+    "should use fuzzyIdentifiers if provided" {
+        val source = unit1
+        val fuzzConfiguration = FuzzConfiguration()
+        val definedIdentifiers : Set<Pair<String, String>> =  setOf(Pair("VARIABLE", "i"), Pair("VARIABLE", "j"), Pair("VARIABLE", "k"))
+        val fuzzedIdentifiers : Set<String> =  setOf("fizz", "buzz", "fizzbuzz")
+        val fuzzedIdentifier : MutableList<String> =  mutableListOf("fizz", "buzz", "fizzbuzz")
+        fuzzConfiguration.fuzzyIdentifierTargets = IdSupplier(definedIdentifiers, fuzzedIdentifiers.toMutableList()) // We specifically use toMutableList() in order to copy it rather than pass a reference to the original list
+        val fuzzedSource = fuzzCompilationUnit(source, fuzzConfiguration)
+        val charStream = CharStreams.fromString(fuzzedSource)
+        val javaLexer = JavaLexer(charStream)
+
+        val variables = HashMap<String, Int>()
+        val parsedTokens = javaLexer.allTokens.map {
+            it.text
+        }.filter {
+            fuzzedIdentifiers.contains(it)
+        }
+
+        for (token in parsedTokens) {
+            variables[token] = variables.getOrDefault(token,0) + 1
+        }
+        variables.values.size shouldBe 2
+        val variableFrequencies = variables.values.toMutableList()
+        variableFrequencies.sort()
+        variableFrequencies shouldBe mutableListOf(4, 5)
+    }
+
+
+    "should replace with fuzzyIdentifiers if provided" {
+        val source = unit1
+        val fuzzConfiguration = FuzzConfiguration()
+        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
+        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+        fuzzedSource shouldNotContain(";")
+    }
+
     "should implement fuzzy method identifiers on compilation units" {
         val source = unit2
         val fuzzedSource = fuzzCompilationUnit(source)
