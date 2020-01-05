@@ -1,0 +1,22 @@
+import java.util.List;
+
+public class Main {
+    public static void main() {
+        // Arrays
+        Integer[] array = {0, 1, 2};
+        for (int i : array) {
+          System.out.println(i);
+        }
+
+        // Iterables
+        ArrayList<Integer> iterable = new ArrayList<Integer>();
+        iterable.add(0);
+        iterable.add(1);
+        iterable.add(2);
+        for (Integer i : iterable) {
+          System.out.println(i);
+        }
+    }
+}
+
+
