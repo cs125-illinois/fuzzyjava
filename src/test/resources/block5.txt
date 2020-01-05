@@ -1,0 +1,4 @@
+Integer[] array = {0, 1, 2};
+for (int i : array) {
+  System.out.println(i);
+}
