@@ -12,20 +12,46 @@ interface Transformation {
 // -- Semantics Preserving Transformations --
 
 /**
- * Inverts if-else statements so as to preserve semantics.
+ * Inverts conditional statements so as to preserve semantics.
  *
  * ex. if (condition) { Code Block 1 } else { Code Block 2) ->
  *     if (!condition) { Code Block 2 } else { Code Block 1)
  *
  * @param includeElif true if if-else statements with else-if clauses are also to be inverted
  */
-class InvertIfElse(private val includeElif : Boolean) : Transformation {
-    override val name: String = "invert-if-else"
+class InvertConditional(private val includeElif : Boolean) : Transformation {
+    override val name: String = "invert-conditional"
     override val arguments = mutableSetOf<String>()
     override val isSemanticsPreserving = true
     init {
         if (includeElif) {
             arguments.add("include-elif")
+        }
+    }
+}
+
+/**
+ * Converts for-each loops to for loops
+ *
+ * @param convertArray true if for-each loops that iterate through arrays are to be converted
+ * @param convertIterable true if for-each loops that iterate through iterables are to be converted
+ */
+class ConvertForEachToFor(private val convertArray : Boolean = true, private val convertIterable : Boolean = true, private val rand : Boolean) : Transformation {
+    override val name: String = "for-each-to-for"
+    override val arguments = mutableSetOf<String>()
+    override val isSemanticsPreserving = true
+    init {
+        if (convertArray) {
+            arguments.add("array")
+        }
+        if (convertIterable) {
+            arguments.add("iterable")
+        }
+        if (rand == true) {
+            arguments.add("random")
+        }
+        else {
+            arguments.add("all")
         }
     }
 }
