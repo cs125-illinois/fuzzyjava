@@ -165,5 +165,14 @@ class TestFuzz : StringSpec({
         fuzzedSource shouldNotContain("Iterator<Integer> it = iterable.iterator(); it.hasNext();")
     }
 
-
+    "[for-each-to-for iterable all]" {
+        val source = unit4
+        val fuzzConfiguration = FuzzConfiguration()
+        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
+        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+        fuzzedSource shouldContain("Integer i : array") // Array NOT converted
+        fuzzedSource shouldNotContain("i = 0; i < array.length; i++")
+        fuzzedSource shouldNotContain("Integer i : iterable") // Iterable converted
+        fuzzedSource shouldContain("Iterator<Integer> it = iterable.iterator(); it.hasNext();")
+    }
 })
