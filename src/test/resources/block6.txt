@@ -1,0 +1,7 @@
+ArrayList<Integer> iterable = new ArrayList<Integer>();
+iterable.add(0);
+iterable.add(1);
+iterable.add(2);
+for (Integer i : iterable) {
+  System.out.println(i);
+}
