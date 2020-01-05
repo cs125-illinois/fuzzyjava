@@ -22,6 +22,7 @@ class TestFuzz : StringSpec({
     val unit1 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit1.txt").readText().trim()
     val unit2 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit2.txt").readText().trim()
     val unit3 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit3.txt").readText().trim()
+    val unit4 = File("/Users/arjunvnair/IdeaProjects/fuzzyjava/src/test/resources/unit4.txt").readText().trim()
 
     // Core Fuzzing - Comparisons, Identifiers, Literals
 
@@ -134,11 +135,24 @@ class TestFuzz : StringSpec({
 
     // AST Transformations
 
-    "should remove semicolons if [remove-semicolons all] transformation is applied" {
+    "[remove-semicolons all]" {
         val source = unit1
         val fuzzConfiguration = FuzzConfiguration()
         fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
         val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
         fuzzedSource shouldNotContain(";")
     }
+
+    "[for-each-to-for array iterable all]" {
+        val source = unit4
+        val fuzzConfiguration = FuzzConfiguration()
+        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
+        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+        fuzzedSource shouldNotContain("Integer i : array") // Array converted
+        fuzzedSource shouldContain("i = 0; i < array.length; i++")
+        fuzzedSource shouldNotContain("Integer i : iterable") // Iterable converted
+        fuzzedSource shouldContain("Iterator<Integer> it = iterable.iterator(); it.hasNext();")
+    }
+
+
 })
