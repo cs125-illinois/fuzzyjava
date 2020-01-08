@@ -1,5 +1,6 @@
 package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
+import edu.illinois.cs.cs125.fuzzyjava.ConvertForEachToFor
 import edu.illinois.cs.cs125.fuzzyjava.RemoveSemicolons
 import edu.illinois.cs.cs125.fuzzyjava.antlr.JavaLexer
 import io.kotlintest.matchers.string.shouldContain
@@ -146,8 +147,8 @@ class TestFuzz : StringSpec({
     "[for-each-to-for array iterable all]" {
         val source = unit4
         val fuzzConfiguration = FuzzConfiguration()
-        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
-        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+        fuzzConfiguration.fuzzyTransformations?.add(ConvertForEachToFor(true, true, false))
+        val fuzzedSource = fuzzCompilationUnit(source, fuzzConfiguration)
         fuzzedSource shouldNotContain("Integer i : array") // Array converted
         fuzzedSource shouldContain("i = 0; i < array.length; i++")
         fuzzedSource shouldNotContain("Integer i : iterable") // Iterable converted
@@ -157,8 +158,8 @@ class TestFuzz : StringSpec({
     "[for-each-to-for array all]" {
         val source = unit4
         val fuzzConfiguration = FuzzConfiguration()
-        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
-        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+        fuzzConfiguration.fuzzyTransformations?.add(ConvertForEachToFor(true, false, false))
+        val fuzzedSource = fuzzCompilationUnit(source, fuzzConfiguration)
         fuzzedSource shouldNotContain("Integer i : array") // Array converted
         fuzzedSource shouldContain("i = 0; i < array.length; i++")
         fuzzedSource shouldContain("Integer i : iterable") // Iterable NOT converted
@@ -168,11 +169,11 @@ class TestFuzz : StringSpec({
     "[for-each-to-for iterable all]" {
         val source = unit4
         val fuzzConfiguration = FuzzConfiguration()
-        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
-        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
+        fuzzConfiguration.fuzzyTransformations?.add(ConvertForEachToFor(false, true, false))
+        val fuzzedSource = fuzzCompilationUnit(source, fuzzConfiguration)
         fuzzedSource shouldContain("Integer i : array") // Array NOT converted
         fuzzedSource shouldNotContain("i = 0; i < array.length; i++")
         fuzzedSource shouldNotContain("Integer i : iterable") // Iterable converted
-        fuzzedSource shouldContain("Iterator<Integer> it = iterable.iterator(); it.hasNext();")
+        fuzzedSource shouldContain("java.util.Iterator<Integer> it = iterable.iterator(); it.hasNext();")
     }
 })
