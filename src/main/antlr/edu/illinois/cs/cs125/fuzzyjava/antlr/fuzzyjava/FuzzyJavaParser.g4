@@ -384,12 +384,16 @@ localTypeDeclaration
     | semicolon
     ;
 
+forStatement
+    : FOR '(' forControl ')' statement
+    ;
+
 statement
     : blockLabel=block
     | ASSERT expression (':' expression)? semicolon
     | IF parExpression statement (ELSE statement)?
     | fuzzyIfElse
-    | FOR '(' forControl ')' statement
+    | forStatement
     | WHILE parExpression statement
     | DO statement WHILE parExpression semicolon
     | TRY block (catchClause+ finallyBlock? | finallyBlock)
