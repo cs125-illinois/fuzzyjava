@@ -234,15 +234,15 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     }
 
     /**
-     * Enter a parse tree produced by [FuzzyJavaParser.semicolon].
+     * Enter a semicolon
      * @param ctx the parse tree
      */
     @Override
     override fun enterSemicolon(ctx: FuzzyJavaParser.SemicolonContext) {
         val removeSemicolonsTransformation = configuration.fuzzyTransformations?.find { it.name == "remove-semicolons" }
         if (removeSemicolonsTransformation != null) {
-            val matchLength = ctx.stop.charPositionInLine + 1
             // Check that semicolon transformation is requested by the user
+            val matchLength = ctx.stop.charPositionInLine + 1
             if (removeSemicolonsTransformation.arguments.contains("all") || Math.random() > 0.5) {
                 // If all semicolons are to be removed OR if semicolons are removed randomly and
                 // random chance lands on true, remove semicolon
@@ -251,6 +251,69 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                             ctx.text, ctx.start.line, ctx.start.charPositionInLine,
                             ctx.start.line, matchLength, ";", " ")
                 })
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     *
+     * The default implementation does nothing.
+     */
+    override fun enterForStatement(ctx: FuzzyJavaParser.ForStatementContext) {
+        var isEnhancedForControl : Boolean = ctx.forControl().enhancedForControl() == null;
+        if (isEnhancedForControl) {
+            // If this is a for-each loop
+            val convertForEachToForTransformation = configuration.fuzzyTransformations?.find { it.name == "for-each-to-for" }
+            if (convertForEachToForTransformation != null) {
+
+            }
+        }
+        else {
+            // If this a normal for (not for-each) loop
+
+            val convertForToWhileTransformation = configuration.fuzzyTransformations?.find { it.name == "for-to-while" }
+            if (convertForToWhileTransformation != null) {
+                // If for each to for transformation is requested by the user
+            }
+        }
+    }
+
+    /**
+     * Enter a for-each loop (converting it if convert-for-each-to-for is enabled for the specified type of for-each loop)
+     */
+    override fun enterEnhancedForControl(ctx: FuzzyJavaParser.EnhancedForControlContext) {
+        val convertForEachToForTransformation = configuration.fuzzyTransformations?.find { it.name == "for-each-to-for" }
+        if (convertForEachToForTransformation != null) {
+            // If this is a for-each loop AND for each to for transformation is
+            // requested by the user
+            val matchLength = ctx.stop.charPositionInLine + 1
+            if (convertForEachToForTransformation.arguments.contains("all") || Math.random() > 0.5) {
+                // If all for-each are to be converted OR if for-each are removed randomly and
+                // random chance lands on true
+                var elementType = ctx.getChild(0).text // ex. Integer
+                var elementName = ctx.getChild(1).text // ex. i
+                var collectionName = ctx.getChild(1).text // Array or Iterable
+
+                if (convertForEachToForTransformation.arguments.contains("array")) {
+                    // If array for-each loops are to be converted AND the for-each loop
+                    // is an array for-each loop
+                    sourceModifications.add(lazy {
+                        SourceModification(
+                                ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                                ctx.start.line, matchLength, ctx.text, "int i = 0; i < array.length; i++")
+                    })
+                }
+                else if (convertForEachToForTransformation.arguments.contains("iterable")) {
+                    // If array for-each loops are to be converted AND the for-each loop
+                    // is an array for-each loop
+                    sourceModifications.add(lazy {
+                        SourceModification(
+                                ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                                ctx.start.line, matchLength, ctx.text, " ")
+                    })
+                }
             }
         }
     }
