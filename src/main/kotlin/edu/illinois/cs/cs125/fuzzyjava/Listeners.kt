@@ -335,7 +335,7 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     /**
      * Enter a for-each loop (converting it if convert-for-each-to-for is enabled for the specified type of for-each loop)
      */
-    override fun enterEnhancedForControl(ctx: FuzzyJavaParser.EnhancedForControlContext) {
+    override fun enterEnhancedForControl(ctx: FuzzyJavaParser.EnhancedForControlContext) { /**
         val convertForEachToForTransformation = configuration.fuzzyTransformations?.find { it.name == "for-each-to-for" }
         if (convertForEachToForTransformation != null) {
             // If this is a for-each loop AND for each to for transformation is
@@ -367,6 +367,34 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                     })
                 }
             }
+        }
+        */
+    }
+
+    /**
+     * Enter an expression
+     */
+	override fun enterExpression(ctx: FuzzyJavaParser.ExpressionContext) {
+        if (ctx.getChild(0).text == "!") {
+            // If this is an expression with a logical not operator
+            val expCtx = ctx.getChild(1) // The expression to be negated
+            val primCtx = expCtx.getChild(0)
+            if (primCtx is FuzzyJavaParser.PrimaryContext
+                    && primCtx.getChild(0).text == "("
+                    && primCtx.getChild(2).text == ")") {
+                // If this is a parenthetical expression
+                val demorganTransformation = configuration.fuzzyTransformations?.find { it.name == "demorgan" }
+                if (demorganTransformation != null) {
+                    // If the user has requested a DeMorgan transformation
+                    if (demorganTransformation.arguments.contains("all") || Math.random() > 0.5) {
+                        val parCtx  = primCtx.getChild(1) // We will distribute the negative into the expression inside the parentheses
+
+                    }
+                }
+
+            }
+
+
         }
     }
 }
