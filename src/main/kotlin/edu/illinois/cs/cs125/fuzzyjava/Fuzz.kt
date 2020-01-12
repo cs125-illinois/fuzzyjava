@@ -123,9 +123,9 @@ $modifiedSource
     return modifiedSource
 }
 /**
- * Fuzzes a "unit" of template code.
+ * Fuzzes a unit of template code.
  *
- * @param unit - the block of source code to be fuzzed
+ * @param unit - the unit of source code to be fuzzed
  * @param fuzzConfiguration - the config that will be used to modify the unit
  * @return a unit of Java code
  */

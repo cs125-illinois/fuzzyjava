@@ -1,20 +1,20 @@
-import java.util.List;
-
 public class Main {
     public static void main() {
         // Arrays
         Integer[] array = {0, 1, 2};
-        for (int i : array) {
+        for (Integer i : array) {
           System.out.println(i);
         }
 
         // Iterables
-        ArrayList<Integer> iterable = new ArrayList<Integer>();
+        java.util.ArrayList<Integer> iterable = new java.util.ArrayList<Integer>();
         iterable.add(0);
         iterable.add(1);
         iterable.add(2);
         for (Integer i : iterable) {
           System.out.println(i);
+          System.out.println(2i);
+          System.out.println(3i);
         }
     }
 }

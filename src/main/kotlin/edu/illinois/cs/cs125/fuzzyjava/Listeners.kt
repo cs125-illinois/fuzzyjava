@@ -261,13 +261,64 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      *
      * The default implementation does nothing.
      */
-    override fun enterForStatement(ctx: FuzzyJavaParser.ForStatementContext) {
-        var isEnhancedForControl : Boolean = ctx.forControl().enhancedForControl() == null;
+    override fun enterForStatement(ctx: FuzzyJavaParser.ForStatementContext) { /*
+        var isEnhancedForControl : Boolean = ctx.forControl().enhancedForControl() != null;
         if (isEnhancedForControl) {
             // If this is a for-each loop
             val convertForEachToForTransformation = configuration.fuzzyTransformations?.find { it.name == "for-each-to-for" }
             if (convertForEachToForTransformation != null) {
+                // If for each to for transformation is requested by the user
+                val matchLength = ctx.stop.charPositionInLine + 1
+                if (convertForEachToForTransformation.arguments.contains("all") || Math.random() > 0.5) {
+                    // If all for-each are to be converted OR if for-each are removed randomly and
+                    // random chance lands on true
+                    var elementType = ctx.forControl().enhancedForControl().getChild(0).text // Type (ex. Integer)
+                    var elementName = ctx.forControl().enhancedForControl().getChild(1).text // Var Name (ex. i)
+                    var collectionName = ctx.forControl().enhancedForControl().getChild(1).text // Array or Iterable
 
+                    var newForControl : String = ""; // Unenhanced For Control (ex. "i = 0; i < array.length; i++")
+                    var newElementRetrievalStatement : String = ""; // First Statement (ex. "String e = array[i];")
+
+                    if (convertForEachToForTransformation.arguments.contains("array")) {
+                        // If array for-each loops are to be converted AND the for-each loop
+                        // is an array for-each loop
+
+                    }
+                    else if (convertForEachToForTransformation.arguments.contains("iterable")) {
+                        // If array for-each loops are to be converted AND the for-each loop
+                        // is an array for-each loop
+                        sourceModifications.add(lazy {
+                            SourceModification(
+                                    ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                                    ctx.start.line, matchLength, ctx.text, " ")
+                        })
+                    }
+                    else {
+                        return; // Ensures that source modification is NOT added
+                                // if this loop is not to be converted
+                    }
+
+                    var contents = ctx.getChild(4).text // Contents of loop
+                    if (!(contents[0] == '{' && contents[contents.length - 1] == '}')) {
+                        // If NOT a block statement (one-liner)
+                        contents = "{\n" + contents.prependIndent("    ") + "\n}"// Make it a block statement, adding tabs to each line to make it look nice
+                    }
+                    contents = ""
+
+
+                    sourceModifications.add(lazy {
+                        SourceModification(
+                                ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                                ctx.start.line, matchLength, ctx.forControl().enhancedForControl().text, newForControl)
+                    })
+
+                    sourceModifications.add(lazy {
+                        SourceModification(
+                                ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                                ctx.start.line, matchLength, ctx.forControl().enhancedForControl().text, newForControl)
+                    })
+
+                }
             }
         }
         else {
@@ -278,6 +329,7 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                 // If for each to for transformation is requested by the user
             }
         }
+        */
     }
 
     /**

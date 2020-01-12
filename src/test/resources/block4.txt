@@ -1,6 +1,0 @@
-if (1 == 5) {
-    System.out.println("This doesn't look good.");
-}
-else {
-    System.out.println("This looks good.");
-}

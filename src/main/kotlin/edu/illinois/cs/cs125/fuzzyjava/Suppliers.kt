@@ -4,7 +4,7 @@ import kotlin.math.roundToInt
 
 // Todo: Make this flexible enough for ALL identifiers (variable, class, enum, method, interface, ect.)
 /**
- * A class that lazily generates an infinite sequence of ids.
+ * A class that supplies either specified fuzzy ids or an infinite sequence of cs125Ids
  *
  * @param definedIdentifiers the identifiers in the code
  * @param fuzzyIdentifiers an optional set of ids the user would like to replace the ids in the code
