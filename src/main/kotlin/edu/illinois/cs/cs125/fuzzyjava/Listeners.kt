@@ -2,6 +2,7 @@ package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParserBaseListener
+import org.antlr.runtime.tree.ParseTree
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -387,8 +388,33 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                 if (demorganTransformation != null) {
                     // If the user has requested a DeMorgan transformation
                     if (demorganTransformation.arguments.contains("all") || Math.random() > 0.5) {
-                        val parCtx  = primCtx.getChild(1) // We will distribute the negative into the expression inside the parentheses
+                        // If the user has requested all not expressions be expanded OR
+                        // they have requested rand and Math.rand lands on 0.5 or greater
+                        val expInsideParCtx  = primCtx.getChild(1) // We will distribute the negative into the expression inside the parentheses
+                        for (i in 0 until expInsideParCtx.childCount) {
+                            val boolOpExpCtx = expInsideParCtx.getChild(i) // Either operator or boolean expression - individual piece of compound exp.
+                            val matchLength = boolOpExpCtx
+                            if (boolOpExpCtx.text == "&") { // & -> |
 
+                            }
+                            else if (boolOpExpCtx.text == "|") { // | -> &
+
+                            }
+                            else if (boolOpExpCtx.text == "&&") { // && -> ||
+
+                            }
+                            else if (boolOpExpCtx.text == "||") { // || -> &&
+
+                            }
+                            else { // If it is not a bool operator, then it is a bool exp
+                                if (boolOpExpCtx.childCount == 1) { // If primary expression, prepend a !
+
+                                }
+                                else { // If not a primary expression, put it in a parenthetical
+
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -396,6 +422,15 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
 
 
         }
+    }
+
+    /**
+     * Distributes a negative across a boolean expression (for DeMorgan's transformation).
+     *
+     * NOTE: Uses recursion and is memory-intensive
+     */
+    private fun negateExpression(ctx: ParseTree) : ParseTree {
+
     }
 }
 /**
