@@ -496,6 +496,7 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
             }
             return negatedExpression
         }
+        return ctx.text
     }
 }
 /**
