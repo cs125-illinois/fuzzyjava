@@ -2,7 +2,7 @@ package edu.illinois.cs.cs125.fuzzyjava.edu.illinois.cs.cs125.fuzzyjava
 
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParser
 import edu.illinois.cs.cs125.fuzzyjava.antlr.FuzzyJavaParserBaseListener
-import org.antlr.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.ParseTree
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -391,6 +391,16 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                         // If the user has requested all not expressions be expanded OR
                         // they have requested rand and Math.rand lands on 0.5 or greater
                         val expInsideParCtx  = primCtx.getChild(1) // We will distribute the negative into the expression inside the parentheses
+                        val negExpInsideParCtx = negateExpression(expInsideParCtx)
+                        val matchLength = ctx.stop.charPositionInLine + 1
+                        sourceModifications.add(lazy {
+                            SourceModification(
+                                    ctx.text, ctx.start.line, ctx.start.charPositionInLine,
+                                    ctx.stop.line, matchLength, ctx.text, "(" + negExpInsideParCtx.text + ")")
+                        })
+
+
+
                         for (i in 0 until expInsideParCtx.childCount) {
                             val boolOpExpCtx = expInsideParCtx.getChild(i) // Either operator or boolean expression - individual piece of compound exp.
                             val matchLength = boolOpExpCtx
@@ -429,8 +439,22 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      *
      * NOTE: Uses recursion and is memory-intensive
      */
-    private fun negateExpression(ctx: ParseTree) : ParseTree {
+    private fun negateExpression(ctx: ParseTree) : String {
+        var negatedExpression : String
+        if (ctx.childCount == 0) { // Base Case: identifiers, literals
 
+
+            if ((ctx as? FuzzyJavaParser.IdentifierContext).) {
+            }
+            negatedExpression = "!" + ctx.text
+        }
+        else {
+            negatedExpression = ""
+            for (i in 0 until ctx.childCount) {
+                negatedExpression += negateExpression(ctx.getChild(i))
+            }
+        }
+        return negatedExpression
     }
 }
 /**
