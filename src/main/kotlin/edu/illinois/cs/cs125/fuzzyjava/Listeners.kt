@@ -442,11 +442,26 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
     private fun negateExpression(ctx: ParseTree) : String {
         var negatedExpression : String
         if (ctx.childCount == 0) { // Base Case: identifiers, literals
-
-
-            if ((ctx as? FuzzyJavaParser.IdentifierContext).) {
+            if ((ctx as? FuzzyJavaParser.IdentifierContext)?.text == "boolean") { // Boolean identifier
+                negatedExpression = "!" + ctx.text
             }
-            negatedExpression = "!" + ctx.text
+            else if (ctx is FuzzyJavaParser.IdentifierContext) { // Non-boolean identifier
+
+            }
+        }
+        else if (ctx.childCount == 3) {
+            if (ctx.getChild(1).text == ">") {
+                return ctx.getChild(0).text + "<" + ctx.getChild(2).text
+            }
+            else if (ctx.getChild(1).text == "<") {
+                return ctx.getChild(0).text + ">" + ctx.getChild(2).text
+            }
+            else if (ctx.getChild(1).text == ">=") {
+                return ctx.getChild(0).text + "<=" + ctx.getChild(2).text
+            }
+            else if (ctx.getChild(1).text == "<=") {
+                return ctx.getChild(0).text + ">=" + ctx.getChild(2).text
+            }
         }
         else {
             negatedExpression = ""
