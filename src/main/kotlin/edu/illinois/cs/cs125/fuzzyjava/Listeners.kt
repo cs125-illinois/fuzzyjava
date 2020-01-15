@@ -462,6 +462,15 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
             else if (ctx.getChild(1).text == "<=") {
                 return ctx.getChild(0).text + ">=" + ctx.getChild(2).text
             }
+            else if (ctx.getChild(1).text == "==") {
+                return ctx.getChild(0).text + "!=" + ctx.getChild(2).text
+            }
+            else if (ctx.getChild(1).text == "!=") {
+                return ctx.getChild(0).text + "==" + ctx.getChild(2).text
+            }
+            else if (ctx.getChild(1).text == "instanceof") {
+                return "!(" + ctx.getChild(0).text + "instanceof" + ctx.getChild(2).text + ")"
+            }
         }
         else {
             negatedExpression = ""
