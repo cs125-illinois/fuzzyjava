@@ -440,14 +440,19 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
      * NOTE: Uses recursion and is memory-intensive
      */
     private fun negateExpression(ctx: ParseTree) : String {
-        var negatedExpression : String
-        if (ctx.childCount == 0) { // Base Case: identifiers, literals
-            if ((ctx as? FuzzyJavaParser.IdentifierContext)?.text == "boolean") { // Boolean identifier
-                negatedExpression = "!" + ctx.text
+        if (ctx.childCount == 0) { // Booleans
+            if (ctx is FuzzyJavaParser.IdentifierContext) { // Boolean Identifier
+                // Note that b/c of base case for comparison operator expressions, the
+                // only identifiers that will be evaluated here are boolean identifiers
+                return "!" + ctx.text
             }
-            else if (ctx is FuzzyJavaParser.IdentifierContext) { // Non-boolean identifier
+            else if (ctx.text == "true") { // Boolean Literal: true
+                return "false"
+            }
+            else if (ctx.text == "false") { // Boolean Literal: false
+                return "true"
+            }
 
-            }
         }
         else if (ctx.childCount == 3) {
             if (ctx.getChild(1).text == ">") {
@@ -485,12 +490,12 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
             }
         }
         else {
-            negatedExpression = ""
+            var negatedExpression = ""
             for (i in 0 until ctx.childCount) {
                 negatedExpression += negateExpression(ctx.getChild(i))
             }
+            return negatedExpression
         }
-        return negatedExpression
     }
 }
 /**
