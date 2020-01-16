@@ -1,0 +1,4 @@
+bool b = true;
+if(!(b)) {
+  System.out.println("Hello");
+}
