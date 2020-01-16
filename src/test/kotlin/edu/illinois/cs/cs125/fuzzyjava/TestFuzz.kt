@@ -75,7 +75,6 @@ class TestFuzz : StringSpec({
         val fuzzConfiguration = FuzzConfiguration()
         val definedIdentifiers : Set<Pair<String, String>> =  setOf(Pair("VARIABLE", "i"), Pair("VARIABLE", "j"), Pair("VARIABLE", "k"))
         val fuzzedIdentifiers : Set<String> =  setOf("fizz", "buzz", "fizzbuzz")
-        val fuzzedIdentifier : MutableList<String> =  mutableListOf("fizz", "buzz", "fizzbuzz")
         fuzzConfiguration.fuzzyIdentifierTargets = IdSupplier(definedIdentifiers, fuzzedIdentifiers.toMutableList()) // We specifically use toMutableList() in order to copy it rather than pass a reference to the original list
         val fuzzedSource = fuzzCompilationUnit(source, fuzzConfiguration)
         val charStream = CharStreams.fromString(fuzzedSource)
@@ -95,15 +94,6 @@ class TestFuzz : StringSpec({
         val variableFrequencies = variables.values.toMutableList()
         variableFrequencies.sort()
         variableFrequencies shouldBe mutableListOf(4, 5)
-    }
-
-
-    "should replace with fuzzyIdentifiers if provided" {
-        val source = unit1
-        val fuzzConfiguration = FuzzConfiguration()
-        fuzzConfiguration.fuzzyTransformations?.add(RemoveSemicolons(false))
-        val fuzzedSource = fuzzCompilationUnitWithoutParse(source, fuzzConfiguration)
-        fuzzedSource shouldNotContain(";")
     }
 
     "should implement fuzzy method identifiers on compilation units" {
