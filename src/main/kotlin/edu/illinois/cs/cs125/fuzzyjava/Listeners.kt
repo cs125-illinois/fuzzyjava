@@ -396,35 +396,8 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                         sourceModifications.add(lazy {
                             SourceModification(
                                     ctx.text, ctx.start.line, ctx.start.charPositionInLine,
-                                    ctx.stop.line, matchLength, ctx.text, "(" + negExpInsideParCtx.text + ")")
+                                    ctx.stop.line, matchLength, ctx.text, negExpInsideParCtx)
                         })
-
-
-
-                        for (i in 0 until expInsideParCtx.childCount) {
-                            val boolOpExpCtx = expInsideParCtx.getChild(i) // Either operator or boolean expression - individual piece of compound exp.
-                            val matchLength = boolOpExpCtx
-                            if (boolOpExpCtx.text == "&") { // & -> |
-
-                            }
-                            else if (boolOpExpCtx.text == "|") { // | -> &
-
-                            }
-                            else if (boolOpExpCtx.text == "&&") { // && -> ||
-
-                            }
-                            else if (boolOpExpCtx.text == "||") { // || -> &&
-
-                            }
-                            else { // If it is not a bool operator, then it is a bool exp
-                                if (boolOpExpCtx.childCount == 1) { // If primary expression, prepend a !
-
-                                }
-                                else { // If not a primary expression, put it in a parenthetical
-
-                                }
-                            }
-                        }
                     }
                 }
 
@@ -474,16 +447,16 @@ class Fuzzer(private val configuration: FuzzConfiguration) : FuzzyJavaParserBase
                 return ctx.getChild(0).text + "==" + ctx.getChild(2).text
             }
             else if (ctx.getChild(1).text == "&&") {
-                return negateExpression(ctx.getChild(0)) + "||" + negateExpression(ctx.getChild(2))
+                return "(" + negateExpression(ctx.getChild(0)) + "||" + negateExpression(ctx.getChild(2)) + ")"
             }
             else if (ctx.getChild(1).text == "||") {
-                return negateExpression(ctx.getChild(0)) + "&&" + negateExpression(ctx.getChild(2))
+                return "(" + negateExpression(ctx.getChild(0)) + "&&" + negateExpression(ctx.getChild(2)) + ")"
             }
             else if (ctx.getChild(1).text == "&") {
-                return negateExpression(ctx.getChild(0)) + "|" + negateExpression(ctx.getChild(2))
+                return "(" + negateExpression(ctx.getChild(0)) + "|" + negateExpression(ctx.getChild(2)) + ")"
             }
             else if (ctx.getChild(1).text == "|") {
-                return negateExpression(ctx.getChild(0)) + "&" + negateExpression(ctx.getChild(2))
+                return "(" + negateExpression(ctx.getChild(0)) + "&" + negateExpression(ctx.getChild(2)) + ")"
             }
             else if (ctx.getChild(1).text == "instanceof") {
                 return "!(" + ctx.getChild(0).text + "instanceof" + ctx.getChild(2).text + ")"
